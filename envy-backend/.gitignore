@@ -13,3 +13,6 @@ npm-debug.log*
 # Optional for yarn package manager
 .yarn
 .yarn-cache
+
+
+.history/
