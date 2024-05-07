@@ -1,24 +1,33 @@
+import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 import pg from 'pg';
-
 const { Pool } = pg;
 
-// Create a pool instance and configure it with environment variables
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT
-});
-
-// Export the pool and query function for use throughout your application
-export const query = (text, params) => pool.query(text, params);
-
-// Example function to demonstrate a database query
-export async function fetchExample() {
-    const res = await query('SELECT NOW()');
-    console.log('Current Timestamp:', res.rows[0]);
+async function getDatabaseCredentials() {
+  const client = new SecretsManagerClient({ region: "eu-north-1" });
+  const data = await client.send(
+    new GetSecretValueCommand({
+      SecretId: "rds!db-55acf308-c8fc-4010-b51c-20ea08f79d85",
+      VersionStage: "AWSCURRENT",
+    })
+  );
+  return JSON.parse(data.SecretString);
 }
 
-// Uncomment the following line to test the database connection directly from this file
-fetchExample();
+export async function connectToDatabase() {
+  const credentials = await getDatabaseCredentials();
+  
+  const pool = new Pool({
+    user: credentials.username,
+    host: credentials.host,
+    database: credentials.dbname,
+    password: credentials.password,
+    port: credentials.port,
+    ssl: {
+      rejectUnauthorized: true,
+      ca: credentials.sslrootcert
+    }
+  });
+
+  const res = await pool.query('SELECT NOW()');
+  return res;
+}
