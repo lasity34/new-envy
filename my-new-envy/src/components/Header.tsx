@@ -77,7 +77,6 @@ const IconNavLink = styled.li`
   }
 `;
 
-
 const NavLink = styled.li`
   position: relative;
   margin-left: 20px;
@@ -114,7 +113,6 @@ const CapImage = styled.img`
   width: 150px;
 `;
 
-
 const CartIconContainer = styled.div`
   position: relative;
   display: inline-block;
@@ -135,7 +133,6 @@ const ItemCountBadge = styled.span`
   z-index: 1;
 `;
 
-
 const Header = () => {
   const location = useLocation();
   const { state } = useCart();
@@ -155,12 +152,12 @@ const Header = () => {
         <AccountCartContainer>
           <IconNavLinks>
             <IconNavLink>
-              <RouterLink to="/account">
+              <RouterLink to="/login">
                 <CiUser />
               </RouterLink>
             </IconNavLink>
             <IconNavLink>
-            <CartIconContainer>
+              <CartIconContainer>
                 <RouterLink to="/cart">
                   <MdOutlineShoppingBag />
                   {itemCount > 0 && (

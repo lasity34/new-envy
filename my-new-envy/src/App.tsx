@@ -4,9 +4,13 @@ import HeroBanner from "./components/HeroBanner";
 import FeaturedProducts from "./components/FeaturedProducts";
 import AboutUs from "./components/AboutUs";
 import ContactUs from "./components/ContactUs";
-import ProductDetails from "./components/ProductDetails"; // Ensure you import the ProductDetails
+import ProductDetails from "./components/ProductDetails";
 import { CartProvider } from "./context/CartContext";
 import ShoppingCart from './components/ShoppingCart';
+import Signup from './auth/signup';
+import Login from './auth/login';
+import PrivateRoute from './auth/privateRoute';
+import Dashboard from './admin/Dashboard';
 
 function App() {
   return (
@@ -36,6 +40,9 @@ function App() {
             />
             <Route path="/products/:id" element={<ProductDetails />} />
             <Route path="/cart" element={<ShoppingCart />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<PrivateRoute path="/dashboard" element={<Dashboard />} />} />
           </Routes>
         </div>
       </Router>
