@@ -1,5 +1,3 @@
-// db/database.js
-
 import pg from 'pg';
 import { readFileSync } from 'fs';
 const { Pool } = pg;
@@ -39,6 +37,69 @@ export async function getProducts() {
     return rows;
   } catch (error) {
     console.error('Error fetching products:', error);
+    throw error;
+  }
+}
+
+export async function getProductById(id) {
+  try {
+    if (!pool) {
+      throw new Error('Database pool is not initialized');
+    }
+
+    const query = 'SELECT * FROM products WHERE id = $1';
+    const { rows } = await pool.query(query, [id]);
+    return rows[0];
+  } catch (error) {
+    console.error('Error fetching product by ID:', error);
+    throw error;
+  }
+}
+
+export async function createProduct({ name, description, price, stock, imageUrl }) {
+  try {
+    if (!pool) {
+      throw new Error('Database pool is not initialized');
+    }
+
+    const query = 'INSERT INTO products (name, description, price, stock, imageUrl) VALUES ($1, $2, $3, $4, $5) RETURNING *';
+    const values = [name, description, price, stock, imageUrl];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+  } catch (error) {
+    console.error('Error creating product:', error);
+    throw error;
+  }
+}
+
+export async function updateProduct(id, { name, description, price, stock, imageUrl }) {
+  try {
+    if (!pool) {
+      throw new Error('Database pool is not initialized');
+    }
+
+    const query = 'UPDATE products SET name = $1, description = $2, price = $3, stock = $4, imageUrl = $5 WHERE id = $6 RETURNING *';
+    const values = [name, description, price, stock, imageUrl, id];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+  } catch (error) {
+    console.error('Error updating product:', error);
+    throw error;
+  }
+}
+
+export async function deleteProduct(id) {
+  try {
+    if (!pool) {
+      throw new Error('Database pool is not initialized');
+    }
+
+    const query = 'DELETE FROM products WHERE id = $1 RETURNING *';
+    const values = [id];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+  } catch (error) {
+    console.error('Error deleting product:', error);
     throw error;
   }
 }

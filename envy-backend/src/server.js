@@ -1,19 +1,19 @@
 import express from 'express';
-import cors from 'cors'; // Import cors
+import cors from 'cors';
 import { config as dotenvConfig } from 'dotenv';
 import bodyParser from 'body-parser';
-import { connectDatabase, getProducts } from '../db/database.js';
+import { connectDatabase } from '../db/database.js';
 import { getSecret, downloadFileFromS3 } from '../services/aws-services.js';
 import authRoutes from '../routes/authRoutes.js';
-import authenticate from '../middleware/auth.js'; // Import the middleware
+import productRoutes from '../routes/productRoutes.js';
+import authenticate from '../middleware/auth.js';
 
-// Load environment variables from .env file
 dotenvConfig();
 
 const requiredEnvVariables = [
-  'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_REGION', 
+  'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_REGION',
   'DB_SECRET_ID', 'BUCKET', 'KEY', 'USE_SSL', 'JWT_SECRET',
-  'EMAIL_USER', 
+  'EMAIL_USER',
 ];
 
 for (const varName of requiredEnvVariables) {
@@ -26,9 +26,9 @@ for (const varName of requiredEnvVariables) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors()); // Enable CORS for all routes
-app.use(bodyParser.json()); // Ensure this is set up correctly
-app.use(bodyParser.urlencoded({ extended: true })); // Add this line to parse URL-encoded data
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 async function initializeApp() {
   try {
@@ -42,7 +42,7 @@ async function initializeApp() {
     await connectDatabase(credentials, sslCertPath);
   } catch (error) {
     console.error('Failed to initialize the application:', error);
-    process.exit(1); // Stop the server if initialization fails
+    process.exit(1);
   }
 }
 
@@ -50,19 +50,9 @@ app.get('/', (req, res) => {
   res.send('Hello from Envy backend!');
 });
 
-app.get('/api/products', async (req, res) => {
-  try {
-    const products = await getProducts();
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Use authentication routes
+app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 
-// Example of a protected route
 app.get('/api/protected', authenticate, (req, res) => {
   res.json({ message: 'This is a protected route' });
 });

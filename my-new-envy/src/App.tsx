@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
 import HeroBanner from "./components/HeroBanner";
-import FeaturedProducts from "./components/FeaturedProducts";
+import FeaturedProducts from "./products/FeaturedProducts";
 import AboutUs from "./components/AboutUs";
 import ContactUs from "./components/ContactUs";
-import ProductDetails from "./components/ProductDetails";
+import ProductDetails from "./products/ProductDetails";
 import { CartProvider } from "./context/CartContext";
 import { UserProvider, useUser } from "./context/UserContext";
 import ShoppingCart from './components/ShoppingCart';
@@ -14,6 +14,7 @@ import PrivateRoute from './auth/privateRoute';
 import Dashboard from './admin/Dashboard';
 import ForgotPassword from "./auth/ForgotPassword";
 import ResetPassword from './auth/resetPassword';
+import AdminProducts from './pages/AdminProducts'; // Import the AdminProducts component
 import { useEffect } from 'react';
 
 function App() {
@@ -65,6 +66,7 @@ const AppContent = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/dashboard" element={<PrivateRoute path="/dashboard" element={<Dashboard />} />} />
+        <Route path="/admin/products" element={<PrivateRoute path="/admin/products" element={<AdminProducts />} />} /> {/* Add route for AdminProducts */}
       </Routes>
     </div>
   );
