@@ -1,8 +1,11 @@
+// src/auth/Login.tsx
+
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useUser } from '../context/UserContext';
+import Notification from '../components/Notification';
 
 const Container = styled.div`
   display: flex;
@@ -88,9 +91,16 @@ const ForgotPasswordLink = styled(Link)`
   }
 `;
 
+interface NotificationState {
+  message: string;
+  show: boolean;
+  type: 'success' | 'error';
+}
+
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [notification, setNotification] = useState<NotificationState>({ message: '', show: false, type: 'success' });
   const { setUser } = useUser();
   const navigate = useNavigate();
 
@@ -101,8 +111,23 @@ const Login: React.FC = () => {
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       navigate('/');
-    } catch (error) {
-      alert('Login failed');
+    } catch (error: any) {
+      if (error.response && error.response.data.message) {
+        if (error.response.data.message === 'Email not found') {
+          setNotification({ message: 'Email not found', show: true, type: 'error' });
+        } else if (error.response.data.message === 'Invalid password') {
+          setNotification({ message: 'Invalid password', show: true, type: 'error' });
+        } else {
+          setNotification({ message: 'Login failed', show: true, type: 'error' });
+        }
+      } else {
+        setNotification({ message: 'An unknown error occurred', show: true, type: 'error' });
+      }
+
+      // Hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ ...notification, show: false });
+      }, 5000);
     }
   };
 
@@ -126,11 +151,12 @@ const Login: React.FC = () => {
             required 
           />
           <ForgotPasswordLink to="/forgot-password">Forgot your password?</ForgotPasswordLink>
+          <Notification message={notification.message} show={notification.show} type={notification.type} />
           <ButtonContainer>
             <Button type="submit">Sign in</Button>
           </ButtonContainer>
         </Form>
-        <Text> <StyledLink to="/signup">Create account</StyledLink></Text>
+        <Text><StyledLink to="/signup">Create account</StyledLink></Text>
       </FormWrapper>
     </Container>
   );

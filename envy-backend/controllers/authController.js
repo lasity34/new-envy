@@ -46,7 +46,7 @@ export const login = async (req, res) => {
   try {
     const user = await getUserByEmail(email);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'Email not found' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -61,6 +61,7 @@ export const login = async (req, res) => {
     res.status(500).json({ message: 'Error logging in', error: error.message });
   }
 };
+
 
 export const getMe = async (req, res) => {
   try {

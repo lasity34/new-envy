@@ -1,8 +1,11 @@
+// src/auth/Signup.tsx
+
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useUser } from '../context/UserContext';
+import Notification from '../components/Notification';
 
 const Container = styled.div`
   display: flex;
@@ -31,14 +34,6 @@ const Title = styled.h2`
   font-weight: 400;
 `;
 
-const Label = styled.label`
-  margin-bottom: 10px;
-  font-weight: bold;
-  display: block;
-  text-align: left;
-  font-size: 1rem;
-`;
-
 const Input = styled.input`
   padding: 10px;
   margin-bottom: 20px;
@@ -50,12 +45,11 @@ const Input = styled.input`
 
 const Button = styled.button`
   padding: 0.8em 0.4em;
-  background-color:  #2e2c2c;
+  background-color: #2e2c2c;
   width: 40%;
   color: white;
   border: none;
   justify-self: center;
-
   font-size: 1rem;
   cursor: pointer;
   margin-top: 10px;
@@ -85,10 +79,17 @@ const StyledLink = styled(Link)`
   }
 `;
 
+interface NotificationState {
+  message: string;
+  show: boolean;
+  type: 'success' | 'error';
+}
+
 const Signup: React.FC = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [notification, setNotification] = useState<NotificationState>({ message: '', show: false, type: 'success' });
   const { setUser } = useUser();
   const navigate = useNavigate();
 
@@ -98,8 +99,23 @@ const Signup: React.FC = () => {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/signup`, { username, email, password });
       setUser(response.data.user);
       navigate('/');
-    } catch (error) {
-      alert('Signup failed');
+    } catch (error: any) {
+      if (error.response && error.response.data.message) {
+        if (error.response.data.message === 'Email is already in use') {
+          setNotification({ message: 'Email is already in use', show: true, type: 'error' });
+        } else if (error.response.data.message === 'Username is already taken') {
+          setNotification({ message: 'Username is already taken', show: true, type: 'error' });
+        } else {
+          setNotification({ message: 'Signup failed', show: true, type: 'error' });
+        }
+      } else {
+        setNotification({ message: 'An unknown error occurred', show: true, type: 'error' });
+      }
+
+      // Hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ ...notification, show: false });
+      }, 5000);
     }
   };
 
@@ -129,6 +145,7 @@ const Signup: React.FC = () => {
             placeholder="Password"
             required 
           />
+          <Notification message={notification.message} show={notification.show} type={notification.type} />
           <ButtonContainer>
             <Button type="submit">Sign up</Button>
           </ButtonContainer>
