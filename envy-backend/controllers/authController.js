@@ -1,16 +1,42 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { createUser, getUserByEmail } from '../db/database.js';
+import crypto from 'crypto';
+import sgMail from '@sendgrid/mail';
+import { createUser, getUserByEmail, getUserByUsername, getUserById, pool } from '../db/database.js';
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+const generateToken = (userId) => {
+  return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+};
 
 export const signup = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
+    if (!password) {
+      throw new Error('Password is required');
+    }
+
+    const existingUserByEmail = await getUserByEmail(email);
+    if (existingUserByEmail) {
+      return res.status(400).json({ message: 'Email is already in use' });
+    }
+
+    const existingUserByUsername = await getUserByUsername(username);
+    if (existingUserByUsername) {
+      return res.status(400).json({ message: 'Username is already taken' });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await createUser(username, email, hashedPassword);
-    res.status(201).json({ message: 'User created successfully', user: newUser });
+
+    const token = generateToken(newUser.id);
+
+    res.status(201).json({ message: 'User created successfully', token, user: { id: newUser.id, username: newUser.username, email: newUser.email } });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating user', error });
+    console.error('Error creating user:', error);
+    res.status(500).json({ message: 'Error creating user', error: error.message });
   }
 };
 
@@ -28,9 +54,92 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: 'Invalid password' });
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ message: 'Login successful', token });
+    const token = generateToken(user.id);
+    res.status(200).json({ message: 'Login successful', token, user: { id: user.id, username: user.username, email: user.email } });
   } catch (error) {
-    res.status(500).json({ message: 'Error logging in', error });
+    console.error('Error logging in:', error);
+    res.status(500).json({ message: 'Error logging in', error: error.message });
+  }
+};
+
+export const getMe = async (req, res) => {
+  try {
+    const user = await getUserById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching user', error });
+  }
+};
+
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await getUserByEmail(email);
+    if (!user) {
+      return res.status(400).json({ message: 'Email not found' });
+    }
+
+    const token = crypto.randomBytes(20).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
+
+    const query = 'UPDATE users SET reset_password_token = $1, reset_password_expires = $2 WHERE id = $3';
+    try {
+      await pool.query(query, [token, resetTokenExpiry, user.id]);
+    } catch (dbError) {
+      console.error('Database query error:', dbError);
+      return res.status(500).json({ message: 'Internal server error', error: dbError.message });
+    }
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${token}`;
+
+    const msg = {
+      to: user.email,
+      from: process.env.EMAIL_USER,
+      subject: 'Password Reset',
+      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
+      Please click on the following link, or paste this into your browser to complete the process:\n\n
+      ${resetUrl}\n\n
+      If you did not request this, please ignore this email and your password will remain unchanged.\n`,
+    };
+
+    try {
+      console.log('Sending email to:', user.email); // Debugging log
+      await sgMail.send(msg);
+      console.log('Email sent successfully'); // Debugging log
+      res.status(200).json({ message: 'Password reset email sent' });
+    } catch (error) {
+      console.error('Error sending email:', error); // Log the error
+      res.status(500).json({ message: 'Error sending email', error: error.message });
+    }
+  } catch (error) {
+    console.error('Error in forgotPassword:', error); // Log the error
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  try {
+    const userQuery = 'SELECT * FROM users WHERE reset_password_token = $1 AND reset_password_expires > $2';
+    const user = (await pool.query(userQuery, [token, new Date()])).rows[0];
+
+    if (!user) {
+      return res.status(400).json({ message: 'Password reset token is invalid or has expired' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const updateQuery = 'UPDATE users SET password = $1, reset_password_token = NULL, reset_password_expires = NULL WHERE id = $2';
+    await pool.query(updateQuery, [hashedPassword, user.id]);
+
+    res.status(200).json({ message: 'Password has been reset' });
+  } catch (error) {
+    console.error('Error in resetPassword:', error); // Log the error
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };

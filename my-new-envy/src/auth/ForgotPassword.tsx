@@ -1,8 +1,10 @@
+// src/auth/ForgotPassword.tsx
+
 import React, { useState } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { useUser } from '../context/UserContext';
+import Notification from '../components/Notification';
 
 const Container = styled.div`
   display: flex;
@@ -31,17 +33,9 @@ const Title = styled.h2`
   font-weight: 400;
 `;
 
-const Label = styled.label`
-  margin-bottom: 10px;
-  font-weight: bold;
-  display: block;
-  text-align: left;
-  font-size: 1rem;
-`;
-
 const Input = styled.input`
   padding: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 10px; /* Adjust margin to create space for notification */
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
@@ -50,12 +44,11 @@ const Input = styled.input`
 
 const Button = styled.button`
   padding: 0.8em 0.4em;
-  background-color:  #2e2c2c;
+  background-color: #2e2c2c;
   width: 40%;
   color: white;
   border: none;
   justify-self: center;
-
   font-size: 1rem;
   cursor: pointer;
   margin-top: 10px;
@@ -85,58 +78,52 @@ const StyledLink = styled(Link)`
   }
 `;
 
-const Signup: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const { setUser } = useUser();
-  const navigate = useNavigate();
+interface NotificationState {
+  message: string;
+  show: boolean;
+  type: 'success' | 'error';
+}
 
-  const handleSignup = async (e: React.FormEvent) => {
+const ForgotPassword: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [notification, setNotification] = useState<NotificationState>({ message: '', show: false, type: 'success' });
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/signup`, { username, email, password });
-      setUser(response.data.user);
-      navigate('/');
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/forgot-password`, { email });
+      setNotification({ message: 'Password reset email sent', show: true, type: 'success' });
     } catch (error) {
-      alert('Signup failed');
+      setNotification({ message: 'Failed to send password reset email', show: true, type: 'error' });
     }
+
+    // Hide notification after 5 seconds
+    setTimeout(() => {
+      setNotification({ ...notification, show: false });
+    }, 3000);
   };
 
   return (
     <Container>
       <FormWrapper>
-        <Title>Signup</Title>
-        <Form onSubmit={handleSignup}>
-          <Input 
-            type="text" 
-            value={username} 
-            onChange={(e) => setUsername(e.target.value)} 
-            placeholder="Username"
-            required 
-          />
+        <Title>Forgot Password</Title>
+        <Form onSubmit={handleForgotPassword}>
           <Input 
             type="email" 
             value={email} 
-            onChange={(e) => setEmail(e.target.value)} 
-            placeholder="Email"
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder='Email'
             required 
           />
-          <Input 
-            type="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            placeholder="Password"
-            required 
-          />
+          <Notification message={notification.message} show={notification.show} type={notification.type} />
           <ButtonContainer>
-            <Button type="submit">Sign up</Button>
+            <Button type="submit">Send Reset Link</Button>
           </ButtonContainer>
         </Form>
-        <Text>Already have an account? <StyledLink to="/login">Login here</StyledLink></Text>
+        <Text>Remembered your password? <StyledLink to="/login">Login here</StyledLink></Text>
       </FormWrapper>
     </Container>
   );
 };
 
-export default Signup;
+export default ForgotPassword;

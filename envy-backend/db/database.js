@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config();
+// db/database.js
 
 import pg from 'pg';
 import { readFileSync } from 'fs';
@@ -9,8 +8,6 @@ let pool;
 
 export async function connectDatabase(credentials, sslCertPath) {
   try {
-    console.log('SSL Cert Path:', sslCertPath);
-
     const ssl = process.env.USE_SSL === 'true' ? {
       rejectUnauthorized: process.env.REJECT_UNAUTHORIZED !== 'false',
       ca: readFileSync(sslCertPath).toString()
@@ -52,7 +49,7 @@ export async function createUser(username, email, hashedPassword) {
       throw new Error('Database pool is not initialized');
     }
 
-    const query = 'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *';
+    const query = 'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email, created_at';
     const values = [username, email, hashedPassword];
     const { rows } = await pool.query(query, values);
     return rows[0];
@@ -77,3 +74,37 @@ export async function getUserByEmail(email) {
     throw error;
   }
 }
+
+export async function getUserByUsername(username) {
+  try {
+    if (!pool) {
+      throw new Error('Database pool is not initialized');
+    }
+
+    const query = 'SELECT * FROM users WHERE username = $1';
+    const values = [username];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+  } catch (error) {
+    console.error('Error fetching user by username:', error);
+    throw error;
+  }
+}
+
+export async function getUserById(id) {
+  try {
+    if (!pool) {
+      throw new Error('Database pool is not initialized');
+    }
+
+    const query = 'SELECT * FROM users WHERE id = $1';
+    const values = [id];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+  } catch (error) {
+    console.error('Error fetching user by id:', error);
+    throw error;
+  }
+}
+
+export { pool };
