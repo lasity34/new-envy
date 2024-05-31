@@ -38,7 +38,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           },
         });
         setUser(response.data.user);
-        console.log('User set:', response.data.user);
       } catch (error) {
         console.error('Failed to fetch user:', error);
         clearUser();

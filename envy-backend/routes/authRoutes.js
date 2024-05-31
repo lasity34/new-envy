@@ -1,8 +1,6 @@
-// routes/authRoutes.js (make sure the filename matches the import)
-
 import express from 'express';
 import { signup, login, getMe, forgotPassword, resetPassword } from '../controllers/authController.js';
-import authenticate from '../middleware/auth.js';
+import { authenticate} from '../middleware/auth.js';
 
 const router = express.Router();
 

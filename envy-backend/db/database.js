@@ -33,7 +33,8 @@ export async function getProducts() {
       throw new Error('Database pool is not initialized');
     }
 
-    const { rows } = await pool.query('SELECT * FROM products');
+    const query = 'SELECT id, name, description, price, stock, imageUrl as "imageUrl" FROM products';
+    const { rows } = await pool.query(query);
     return rows;
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -47,7 +48,7 @@ export async function getProductById(id) {
       throw new Error('Database pool is not initialized');
     }
 
-    const query = 'SELECT * FROM products WHERE id = $1';
+    const query = 'SELECT id, name, description, price, stock, imageUrl as "imageUrl" FROM products WHERE id = $1';
     const { rows } = await pool.query(query, [id]);
     return rows[0];
   } catch (error) {

@@ -11,10 +11,11 @@ import ShoppingCart from './components/ShoppingCart';
 import Signup from './auth/signup';
 import Login from './auth/login';
 import PrivateRoute from './auth/privateRoute';
-import Dashboard from './admin/Dashboard';
+import Dashboard from './admin/AdminProducts';
 import ForgotPassword from "./auth/ForgotPassword";
 import ResetPassword from './auth/resetPassword';
-import AdminProducts from './pages/AdminProducts'; // Import the AdminProducts component
+import GeneralAdminPage from './admin/GeneralAdminPage'; // Import the GeneralAdminPage component
+import AdminProducts from './admin/AdminProducts'; // Import the AdminProducts component
 import { useEffect } from 'react';
 
 function App() {
@@ -66,7 +67,9 @@ const AppContent = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/dashboard" element={<PrivateRoute path="/dashboard" element={<Dashboard />} />} />
-        <Route path="/admin/products" element={<PrivateRoute path="/admin/products" element={<AdminProducts />} />} /> {/* Add route for AdminProducts */}
+        <Route path="/admin/dashboard" element={<PrivateRoute path="/admin/dashboard" element={<GeneralAdminPage />} />} />
+        <Route path="/admin/products" element={<PrivateRoute path="/admin/products" element={<AdminProducts />} />} />
+        {/* Add similar routes for Users Management and Order History */}
       </Routes>
     </div>
   );

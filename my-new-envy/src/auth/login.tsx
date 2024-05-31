@@ -1,5 +1,3 @@
-// src/auth/Login.tsx
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
@@ -45,7 +43,7 @@ const Input = styled.input`
 
 const Button = styled.button`
   padding: 0.8em 0.4em;
-  background-color:  #2e2c2c;
+  background-color: #2e2c2c;
   width: 40%;
   color: white;
   border: none;
@@ -91,43 +89,40 @@ const ForgotPasswordLink = styled(Link)`
   }
 `;
 
-interface NotificationState {
-  message: string;
-  show: boolean;
-  type: 'success' | 'error';
-}
-
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Change to identifier
   const [password, setPassword] = useState('');
-  const [notification, setNotification] = useState<NotificationState>({ message: '', show: false, type: 'success' });
+  const [notification, setNotification] = useState<{ message: string; show: boolean; type: 'success' | 'error' }>({
+    message: '',
+    show: false,
+    type: 'success',
+  });
+
   const { setUser } = useUser();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, { email, password });
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, { identifier, password });
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
-      navigate('/');
-    } catch (error: any) {
-      if (error.response && error.response.data.message) {
-        if (error.response.data.message === 'Email not found') {
-          setNotification({ message: 'Email not found', show: true, type: 'error' });
-        } else if (error.response.data.message === 'Invalid password') {
-          setNotification({ message: 'Invalid password', show: true, type: 'error' });
-        } else {
-          setNotification({ message: 'Login failed', show: true, type: 'error' });
-        }
-      } else {
-        setNotification({ message: 'An unknown error occurred', show: true, type: 'error' });
-      }
 
-      // Hide notification after 5 seconds
+      if (response.data.user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data.message || 'Login failed';
+        setNotification({ message: errorMessage, show: true, type: 'error' });
+      } else {
+        setNotification({ message: 'Login failed', show: true, type: 'error' });
+      }
       setTimeout(() => {
         setNotification({ ...notification, show: false });
-      }, 5000);
+      }, 3000);
     }
   };
 
@@ -136,28 +131,30 @@ const Login: React.FC = () => {
       <FormWrapper>
         <Title>Login</Title>
         <Form onSubmit={handleLogin}>
-          <Input 
-            type="email" 
-            value={email} 
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder='Email'
-            required 
+          <Input
+            type="text" // Change to text
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="Email or Username" // Update placeholder
+            required
           />
-          <Input 
-            type="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            placeholder='Password'
-            required 
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+            required
           />
           <ForgotPasswordLink to="/forgot-password">Forgot your password?</ForgotPasswordLink>
-          <Notification message={notification.message} show={notification.show} type={notification.type} />
           <ButtonContainer>
             <Button type="submit">Sign in</Button>
           </ButtonContainer>
         </Form>
-        <Text><StyledLink to="/signup">Create account</StyledLink></Text>
+        <Text>
+          <StyledLink to="/signup">Create account</StyledLink>
+        </Text>
       </FormWrapper>
+      <Notification message={notification.message} show={notification.show} type={notification.type} />
     </Container>
   );
 };

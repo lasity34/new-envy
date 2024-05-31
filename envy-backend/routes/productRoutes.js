@@ -1,18 +1,23 @@
 import express from 'express';
+import multer from 'multer';
 import {
   getAllProducts,
   getProduct,
   addProduct,
   updateProductDetails,
   removeProduct,
+  uploadImage
 } from '../controllers/productsController.js';
+import { authenticateAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
+const upload = multer({ dest: 'uploads/' });
 
 router.get('/', getAllProducts);
 router.get('/:id', getProduct);
-router.post('/', addProduct);
-router.put('/:id', updateProductDetails);
-router.delete('/:id', removeProduct);
+router.post('/', authenticateAdmin, upload.single('image'), addProduct);
+router.put('/:id', authenticateAdmin, upload.single('image'), updateProductDetails);
+router.delete('/:id', authenticateAdmin, removeProduct);
+router.post('/upload', authenticateAdmin, upload.single('image'), uploadImage);
 
 export default router;
