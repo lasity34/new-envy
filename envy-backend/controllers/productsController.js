@@ -58,12 +58,12 @@ export const updateProductDetails = async (req, res) => {
 
   try {
     if (req.file) {
-      console.log('File received for update product:', req.file);
+    
       imageUrl = await uploadFileToS3(req.file);
       console.log('Uploaded image URL:', imageUrl);
     }
 
-    console.log(`Updating product ID: ${id} with data:`, { name, description, price, stock, imageUrl });
+  
     const updatedProduct = await updateProduct(id, { name, description, price, stock, imageUrl });
     if (!updatedProduct) {
       console.error(`Product not found for update with ID: ${id}`);

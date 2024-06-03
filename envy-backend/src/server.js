@@ -7,6 +7,7 @@ import { connectDatabase } from '../db/database.js';
 import { getSecret, downloadFileFromS3, uploadFileToS3 } from '../services/aws-services.js';
 import authRoutes from '../routes/authRoutes.js';
 import productRoutes from '../routes/productRoutes.js';
+import cartRoutes from '../routes/cartRoutes.js'; // Import cart routes
 import { authenticate, authenticateAdmin } from '../middleware/auth.js';
 
 dotenvConfig();
@@ -42,7 +43,6 @@ const upload = multer({ storage });
 async function initializeApp() {
   try {
     const credentials = await getSecret(process.env.DB_SECRET_ID);
-    
 
     const sslCertPath = process.env.USE_SSL === 'true' ? 
       await downloadFileFromS3(process.env.S3_BUCKET_NAME, process.env.KEY, 'C:/tmp/global-bundle.pem') : 
@@ -78,6 +78,7 @@ app.post('/api/products/upload', authenticateAdmin, upload.single('image'), asyn
 
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/cart', cartRoutes); // Add cart routes
 
 app.get('/api/protected', authenticate, (req, res) => {
   res.json({ message: 'This is a protected route' });

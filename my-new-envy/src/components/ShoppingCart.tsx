@@ -118,12 +118,12 @@ display: flex;
 align-items: center;
 justify-content: right;
 width: 98%;
-`
+`;
 
 const TotalPriceText = styled.div`
 font-size: 1.3rem;
 margin-right: 1.6em;
-`
+`;
 
 const TotalPrice = styled.div`
   text-align: right;
@@ -131,8 +131,6 @@ const TotalPrice = styled.div`
   margin: 15px 0;
   color:  #6d6a6a;
 `;
-
-
 
 const QualityAdContainer = styled.div`
   width: 50%;
@@ -150,7 +148,7 @@ const ShoppingCart: React.FC = () => {
   };
 
   const totalPrice = state.items.reduce(
-    (total, item) => total + item.price * item.quantity,
+    (total, item) => total + Number(item.price) * item.quantity,
     0
   );
 
@@ -176,7 +174,7 @@ const ShoppingCart: React.FC = () => {
             <ItemImage src={item.imageUrl} alt={item.name} />
             <ItemInfo>
               <ItemName>{item.name}</ItemName>
-              <ItemPrice>R {item.price.toFixed(2)}</ItemPrice>
+              <ItemPrice>R {Number(item.price).toFixed(2)}</ItemPrice>
             </ItemInfo>
           </ItemDetails>
           <QualityAdContainer>
@@ -198,13 +196,12 @@ const ShoppingCart: React.FC = () => {
                 onClick={() => handleRemove(item.id)}
               />
           </QualityAdContainer>
-          <ItemTotal>R {(item.quantity * item.price).toFixed(2)}</ItemTotal>
+          <ItemTotal>R {(item.quantity * Number(item.price)).toFixed(2)}</ItemTotal>
         </CartItemContainer>
       ))}
       <Total>
-
-      <TotalPriceText>Estimated total </TotalPriceText>
-      <TotalPrice> R {totalPrice.toFixed(2)}</TotalPrice>
+        <TotalPriceText>Estimated total</TotalPriceText>
+        <TotalPrice> R {totalPrice.toFixed(2)}</TotalPrice>
       </Total>
     </CartContainer>
   );

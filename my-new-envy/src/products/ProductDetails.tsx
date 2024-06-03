@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 import { useCart } from "../context/CartContext"; // Make sure the path matches where your context is
 import styled from "styled-components";
-import { products } from "../data";
 import { MdCheck } from "react-icons/md";
+import { Product } from "../types/types";  // Ensure Product type is defined and imported
 
 interface SuccessMessageProps {
   visible: boolean;
@@ -136,12 +137,27 @@ const SuccessMessage = styled.div<SuccessMessageProps>`
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { dispatch } = useCart(); // Using the useCart hook to access dispatch
-  const product = products.find((p) => p.id === id);
+  const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/products/${id}`);
+        setProduct(response.data);
+      } catch (error) {
+        setError('Error fetching product');
+        console.error('Error fetching product:', error);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
 
   if (!product) {
-    return <div>Product not found!</div>;
+    return <div>{error ? error : "Loading product..."}</div>;
   }
 
   const handleAddToCart = () => {

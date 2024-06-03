@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
+import axios from 'axios';
 import ProductCard from './ProductCard';
-import { products } from '../data';  // Ensure this correctly imports the array of products
 import { Product } from '../types/types';  // Ensure Product type is defined and imported
 
 const ProductsContainer = styled.div`
@@ -24,14 +24,35 @@ const SectionHeader = styled.h2`
 `;
 
 const FeaturedProducts: React.FC = () => {
+    const [products, setProducts] = useState<Product[]>([]);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/products`);
+                setProducts(response.data);
+            } catch (error) {
+                setError('Error fetching products');
+                console.error('Error fetching products:', error);
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
     return (
         <>
             <SectionHeader>New Arrivals</SectionHeader>
-            <ProductsContainer>
-                {products.map((product: Product) => (
-                    <ProductCard key={product.id} product={product} />
-                ))}
-            </ProductsContainer>
+            {error ? (
+                <p>{error}</p>
+            ) : (
+                <ProductsContainer>
+                    {products.map((product: Product) => (
+                        <ProductCard key={product.id} product={product} />
+                    ))}
+                </ProductsContainer>
+            )}
         </>
     );
 };
