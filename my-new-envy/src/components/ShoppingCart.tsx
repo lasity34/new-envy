@@ -1,5 +1,6 @@
 import React from "react";
 import { useCart } from "../context/CartContext";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { RiDeleteBinLine } from "react-icons/ri";
 
@@ -114,15 +115,15 @@ const QuantityInput = styled.input`
 `;
 
 const Total = styled.div`
-display: flex;
-align-items: center;
-justify-content: right;
-width: 98%;
+  display: flex;
+  align-items: center;
+  justify-content: right;
+  width: 98%;
 `;
 
 const TotalPriceText = styled.div`
-font-size: 1.3rem;
-margin-right: 1.6em;
+  font-size: 1.3rem;
+  margin-right: 1.6em;
 `;
 
 const TotalPrice = styled.div`
@@ -138,8 +139,19 @@ const QualityAdContainer = styled.div`
   justify-content: center;
 `;
 
+const CheckoutButton = styled.button`
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  margin-top: 20px;
+`;
+
 const ShoppingCart: React.FC = () => {
   const { state, dispatch } = useCart();
+  const navigate = useNavigate();
 
   const handleQuantityChange = (id: string, quantity: number) => {
     if (quantity > 0) {
@@ -158,6 +170,10 @@ const ShoppingCart: React.FC = () => {
 
   const handleRemove = (id: string) => {
     dispatch({ type: "REMOVE_ITEM", payload: { id } });
+  };
+
+  const handleCheckout = () => {
+    navigate("/checkout");
   };
 
   return (
@@ -191,10 +207,10 @@ const ShoppingCart: React.FC = () => {
                 +
               </Button>
             </QuantityAdjuster>
-              <RiDeleteBinLine
-                style={{ cursor: "pointer", marginLeft: "25px", marginTop: "15px"}}
-                onClick={() => handleRemove(item.id)}
-              />
+            <RiDeleteBinLine
+              style={{ cursor: "pointer", marginLeft: "25px", marginTop: "15px" }}
+              onClick={() => handleRemove(item.id)}
+            />
           </QualityAdContainer>
           <ItemTotal>R {(item.quantity * Number(item.price)).toFixed(2)}</ItemTotal>
         </CartItemContainer>
@@ -203,6 +219,7 @@ const ShoppingCart: React.FC = () => {
         <TotalPriceText>Estimated total</TotalPriceText>
         <TotalPrice> R {totalPrice.toFixed(2)}</TotalPrice>
       </Total>
+      <CheckoutButton onClick={handleCheckout}>Proceed to Checkout</CheckoutButton>
     </CartContainer>
   );
 };

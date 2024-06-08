@@ -4,6 +4,7 @@ import { CartState, CartAction, CartItem } from '../../types/types';
 interface CartContextType {
     state: CartState;
     dispatch: React.Dispatch<CartAction>;
+    clearCart: () => void; // Add clearCart to the context type
 }
 
 interface CartProviderProps {
@@ -76,8 +77,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
         }
     }, []);
 
+    // Define the clearCart function
+    const clearCart = () => {
+        dispatch({ type: 'LOAD_CART', payload: [] });
+        localStorage.removeItem('cartItems');
+    };
+
     return (
-        <CartContext.Provider value={{ state, dispatch }}>
+        <CartContext.Provider value={{ state, dispatch, clearCart }}>
             {children}
         </CartContext.Provider>
     );

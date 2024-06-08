@@ -8,6 +8,7 @@ import { getSecret, downloadFileFromS3, uploadFileToS3 } from '../services/aws-s
 import authRoutes from '../routes/authRoutes.js';
 import productRoutes from '../routes/productRoutes.js';
 import cartRoutes from '../routes/cartRoutes.js'; // Import cart routes
+import checkoutRoutes from '../routes/checkoutRoutes.js'; // Import checkout routes
 import { authenticate, authenticateAdmin } from '../middleware/auth.js';
 
 dotenvConfig();
@@ -79,6 +80,7 @@ app.post('/api/products/upload', authenticateAdmin, upload.single('image'), asyn
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes); // Add cart routes
+app.use('/api/checkout', checkoutRoutes); // Add checkout routes
 
 app.get('/api/protected', authenticate, (req, res) => {
   res.json({ message: 'This is a protected route' });

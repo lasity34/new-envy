@@ -16,6 +16,8 @@ import ForgotPassword from "./auth/ForgotPassword";
 import ResetPassword from './auth/resetPassword';
 import GeneralAdminPage from './admin/GeneralAdminPage'; // Import the GeneralAdminPage component
 import AdminProducts from './admin/AdminProducts'; // Import the AdminProducts component
+import MockPayment from './payments/MockPayment'; // Import the MockPayment component
+import OrderConfirmation from './components/OrderConfirmation'; // Import the OrderConfirmation component
 import { useEffect } from 'react';
 
 function App() {
@@ -62,6 +64,8 @@ const AppContent = () => {
         />
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<ShoppingCart />} />
+        <Route path="/checkout" element={<MockPayment />} />
+        <Route path="/order-confirmation" element={<OrderConfirmation />} /> {/* Add the order confirmation route */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -69,7 +73,6 @@ const AppContent = () => {
         <Route path="/dashboard" element={<PrivateRoute path="/dashboard" element={<Dashboard />} />} />
         <Route path="/admin/dashboard" element={<PrivateRoute path="/admin/dashboard" element={<GeneralAdminPage />} />} />
         <Route path="/admin/products" element={<PrivateRoute path="/admin/products" element={<AdminProducts />} />} />
-        {/* Add similar routes for Users Management and Order History */}
       </Routes>
     </div>
   );
