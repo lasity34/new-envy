@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect} from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -37,7 +37,7 @@ const HeaderItem = styled.div`
   font-family: "Playfair", serif;
   font-weight: 300;
   align-items: center;
-  width: 200px; // Adjust if needed
+  width: 200px;
 `;
 
 const CartItemContainer = styled.div`
@@ -153,6 +153,11 @@ const ShoppingCart: React.FC = () => {
   const { state, dispatch } = useCart();
   const navigate = useNavigate();
 
+
+  const handleRemove = (id: string) => {
+    dispatch({ type: "REMOVE_ITEM", payload: { id } });
+  };
+
   const handleQuantityChange = (id: string, quantity: number) => {
     if (quantity > 0) {
       dispatch({ type: "ADJUST_QUANTITY", payload: { id, quantity } });
@@ -160,17 +165,13 @@ const ShoppingCart: React.FC = () => {
   };
 
   const totalPrice = state.items.reduce(
-    (total, item) => total + Number(item.price) * item.quantity,
+    (total, item) => total + (Number(item.price) || 0) * item.quantity,
     0
   );
 
   if (state.items.length === 0) {
     return <div>Your cart is empty!</div>;
   }
-
-  const handleRemove = (id: string) => {
-    dispatch({ type: "REMOVE_ITEM", payload: { id } });
-  };
 
   const handleCheckout = () => {
     navigate("/checkout");
@@ -212,12 +213,12 @@ const ShoppingCart: React.FC = () => {
               onClick={() => handleRemove(item.id)}
             />
           </QualityAdContainer>
-          <ItemTotal>R {(item.quantity * Number(item.price)).toFixed(2)}</ItemTotal>
+          <ItemTotal>R {(Number(item.price) * item.quantity).toFixed(2)}</ItemTotal>
         </CartItemContainer>
       ))}
       <Total>
-        <TotalPriceText>Estimated total</TotalPriceText>
-        <TotalPrice> R {totalPrice.toFixed(2)}</TotalPrice>
+        <TotalPriceText>Total:</TotalPriceText>
+        <TotalPrice>R {totalPrice.toFixed(2)}</TotalPrice>
       </Total>
       <CheckoutButton onClick={handleCheckout}>Proceed to Checkout</CheckoutButton>
     </CartContainer>

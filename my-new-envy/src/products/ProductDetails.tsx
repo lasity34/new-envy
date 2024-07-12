@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { useCart } from "../context/CartContext"; // Make sure the path matches where your context is
+import { useCart } from "../context/CartContext";
+import { useUser } from "../context/UserContext";
 import styled from "styled-components";
 import { MdCheck } from "react-icons/md";
-import { Product } from "../types/types";  // Ensure Product type is defined and imported
+import { Product, CartItem } from "../types/types";
 
 interface SuccessMessageProps {
   visible: boolean;
@@ -29,7 +30,7 @@ const ImageContainer = styled.div`
 
 const ProductImage = styled.img`
   width: 100%;
-  max-width: 500px; // Adjust based on your needs
+  max-width: 500px;
   height: auto;
   object-fit: cover;
   border-radius: 8px;
@@ -66,8 +67,8 @@ const QuantityContainer = styled.div`
   justify-content: center;
   margin-top: 5px;
   margin-bottom: 30px;
-  border: 1px solid #5c5c5c; // Add a subtle border around the entire container
-  padding: 5px; // Add some padding inside the container
+  border: 1px solid #5c5c5c;
+  padding: 5px;
   width: 30%;
 `;
 
@@ -79,7 +80,7 @@ const QuantityButton = styled.button`
   padding: 5px;
   background-color: white;
   cursor: pointer;
-  border: none; // Remove border from buttons
+  border: none;
   font-size: 1.1rem;
 `;
 
@@ -87,19 +88,15 @@ const QuantityInput = styled.input`
   width: 50px;
   text-align: center;
   font-size: 0.9rem;
-  border: none; // Ensure there is no border around the input
-  outline: none; // Removing the outline can affect accessibility, consider adding a custom focus style
-
-  /* Chrome, Safari, Edge, Opera */
+  border: none;
+  outline: none;
   &::-webkit-inner-spin-button,
   &::-webkit-outer-spin-button {
-    -webkit-appearance: none; // Remove default controls
-    margin: 0; // Remove space reserved for controls
+    -webkit-appearance: none;
+    margin: 0;
   }
-
-  /* Firefox */
   &[type="number"] {
-    -moz-appearance: textfield; // Remove default controls
+    -moz-appearance: textfield;
   }
 `;
 
@@ -125,18 +122,24 @@ const Tax = styled.p`
   border-bottom: 1px solid #d1c9c7;
 `;
 
-const SuccessMessage = styled.div<SuccessMessageProps>`
+const SuccessMessage = styled.div`
   display: flex;
   align-items: center;
   color: green;
   font-size: 1rem;
   margin-top: 10px;
-  visibility: ${(props) => (props.visible ? "visible" : "hidden")};
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+
+  &.visible {
+    opacity: 1;
+  }
 `;
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { dispatch } = useCart(); // Using the useCart hook to access dispatch
+  const { state, addToCart } = useCart();
+  const { user } = useUser();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
@@ -145,32 +148,48 @@ const ProductDetails: React.FC = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/products/${id}`);
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/api/products/${id}`
+        );
         setProduct(response.data);
       } catch (error) {
-        setError('Error fetching product');
-        console.error('Error fetching product:', error);
+        setError("Error fetching product");
+        console.error("Error fetching product:", error);
       }
     };
 
     fetchProduct();
   }, [id]);
 
+ 
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (addedToCart) {
+      timer = setTimeout(() => setAddedToCart(false), 3000);
+    }
+    return () => clearTimeout(timer);
+  }, [addedToCart]);
+
   if (!product) {
     return <div>{error ? error : "Loading product..."}</div>;
   }
 
-  const handleAddToCart = () => {
-    dispatch({
-      type: "ADD_ITEM",
-      payload: {
-        ...product,
-        quantity: quantity,
-      },
-    });
+  const handleAddToCart = async () => {
+    const item: CartItem = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: quantity,
+      imageUrl: product.imageUrl,
+      stock: product.stock,
+    };
+  
+    await addToCart(item);
     setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 3000); // Hide the message after 3 seconds
+    setQuantity(1);
   };
+
 
   const handleQuantityChange = (change: number) => {
     let newQuantity = quantity + change;
@@ -178,7 +197,7 @@ const ProductDetails: React.FC = () => {
     if (newQuantity > product.stock) newQuantity = product.stock;
     setQuantity(newQuantity);
   };
-
+  
   return (
     <DetailsContainer>
       <ImageContainer>
@@ -200,7 +219,7 @@ const ProductDetails: React.FC = () => {
           </QuantityButton>
         </QuantityContainer>
         <AddToCartButton onClick={handleAddToCart}>Add to Cart</AddToCartButton>
-        <SuccessMessage visible={addedToCart}>
+        <SuccessMessage className={addedToCart ? "visible" : ""}>
           <MdCheck style={{ marginRight: "5px" }} />
           Item has been successfully added to cart
         </SuccessMessage>

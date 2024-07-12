@@ -3,6 +3,7 @@ import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useUser } from '../context/UserContext';
+import { useCart } from '../context/CartContext';
 import Notification from '../components/Notification';
 
 const Container = styled.div`
@@ -99,6 +100,7 @@ const Login: React.FC = () => {
   });
 
   const { setUser } = useUser();
+  const { syncLocalCartWithDatabase } = useCart();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -107,6 +109,10 @@ const Login: React.FC = () => {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, { identifier, password });
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
+
+  
+        await syncLocalCartWithDatabase();
+      
 
       if (response.data.user.role === 'admin') {
         navigate('/admin/dashboard');

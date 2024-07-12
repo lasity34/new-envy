@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import axios from 'axios';
+import axiosInstance from '../axiosInstance'; // Use axios instance
 
 const formatExpiryDate = (value: string) => {
   const cleanedValue = value.replace(/\D/g, '');
@@ -103,7 +103,7 @@ type UserData = {
 };
 
 const MockPayment = () => {
-  const { state, clearCart } = useCart();
+  const { state, clearLocalCart } = useCart();
   const [userData, setUserData] = useState<UserData>({
     firstName: '',
     lastName: '',
@@ -120,11 +120,16 @@ const MockPayment = () => {
     cvc: '',
   });
   const [saveInfo, setSaveInfo] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setUserData((prevData) => ({ ...prevData, [name]: value }));
+    setUserData((prevData) => {
+      const updatedData = { ...prevData, [name]: value };
+      localStorage.setItem('userData', JSON.stringify(updatedData));
+      return updatedData;
+    });
   };
 
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,7 +140,7 @@ const MockPayment = () => {
     e.preventDefault();
 
     try {
-      const response = await axios.post('/api/checkout/mock-checkout', {
+      const response = await axiosInstance.post('/api/checkout/mock-checkout', {
         userData,
         cartItems: state.items,
       });
@@ -143,13 +148,17 @@ const MockPayment = () => {
       if (response.data.success) {
         if (saveInfo) {
           localStorage.setItem('userData', JSON.stringify(userData));
+        } else {
+          localStorage.removeItem('userData');
         }
-        clearCart();
+        clearLocalCart();
         navigate('/order-confirmation');
       } else {
+        setError('Checkout failed. Please try again.');
         console.error('Checkout failed');
       }
     } catch (error) {
+      setError('Error processing the order. Please try again.');
       console.error('Error processing the order:', error);
     }
   };
@@ -164,6 +173,7 @@ const MockPayment = () => {
   return (
     <CheckoutContainer>
       <CheckoutTitle>Checkout</CheckoutTitle>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
       <Form onSubmit={handleSubmit}>
         <Section>
           <SectionTitle>Contact</SectionTitle>

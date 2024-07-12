@@ -46,19 +46,22 @@ async function assumeRole() {
   }
 }
 
-export async function getSecret(secretId) {
+async function getSecret(secretId) {
   const credentials = await assumeRole();
   const client = new SecretsManagerClient({ region: AWS_REGION, credentials });
   try {
     const data = await client.send(new GetSecretValueCommand({ SecretId: secretId }));
-    return JSON.parse(data.SecretString);
+    const secret = JSON.parse(data.SecretString);
+    console.log('AWS Database Password:', secret.password); // Log the password here
+    return secret;
   } catch (error) {
     console.error('Error getting secret:', error);
     throw error;
   }
 }
 
-export async function downloadFileFromS3(bucket, key, downloadPath) {
+
+async function downloadFileFromS3(bucket, key, downloadPath) {
   const credentials = await assumeRole();
   const s3Client = new S3Client({ region: AWS_REGION, credentials });
 
@@ -82,7 +85,7 @@ export async function downloadFileFromS3(bucket, key, downloadPath) {
   }
 }
 
-export async function uploadFileToS3(file) {
+async function uploadFileToS3(file) {
   const credentials = await assumeRole();
   const s3Client = new S3Client({ region: AWS_REGION, credentials });
   const fileName = `${uuidv4()}-${file.originalname}`;
@@ -103,3 +106,10 @@ export async function uploadFileToS3(file) {
     throw error;
   }
 }
+
+export {
+  assumeRole,
+  getSecret,
+  downloadFileFromS3,
+  uploadFileToS3
+};

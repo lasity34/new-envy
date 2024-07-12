@@ -111,7 +111,7 @@ const CardCvcElementStyled = styled(CardCvcElement)`
 `;
 
 const CheckoutForm = () => {
-  const { state, clearCart } = useCart();
+  const { state, clearLocalCart } = useCart();
   const [userData, setUserData] = useState({ name: '', address: '', email: '', country: 'South Africa', city: '', province: '', postalCode: '', phone: '' });
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
   const [billingData, setBillingData] = useState({ address: '', city: '', province: '', postalCode: '' });
@@ -173,7 +173,7 @@ const CheckoutForm = () => {
         setError(result.error.message || 'An error occurred');
       } else {
         if (result.paymentIntent.status === 'succeeded') {
-          clearCart();
+          clearLocalCart();
           navigate('/order-confirmation');
         }
       }

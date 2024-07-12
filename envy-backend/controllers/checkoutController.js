@@ -33,12 +33,17 @@ export const processOrder = async (req, res) => {
     orders.push(order);
 
     // Clear the cart
-    await clearCart(req, res);
+    await clearCart(req);
 
+    // Send response
     res.send({ success: true, orderId: order.id });
   } catch (error) {
     console.error('Error processing order:', error);
-    res.status(500).send('Server error');
+
+    // Ensure a response is sent only once
+    if (!res.headersSent) {
+      res.status(500).send('Server error');
+    }
   }
 };
 

@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useUser } from '../context/UserContext';
 import styled from 'styled-components';
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const HeaderContainer = styled.header`
   font-family: "Caveat", cursive;
@@ -193,6 +194,7 @@ const Header = () => {
   const { user, logout } = useUser();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   const itemCount = state.items.reduce((acc, item) => acc + item.quantity, 0);
   const isHomePage = location.pathname === '/';
@@ -203,6 +205,18 @@ const Header = () => {
   const handleClickOutside = (event: MouseEvent) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
       setShowDropdown(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setShowDropdown(false);
+      navigate('/'); // Redirect to home page after logout
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Optionally, you can show an error message to the user here
+      // For example, using a toast notification or an alert
     }
   };
 
@@ -237,7 +251,7 @@ const Header = () => {
                 <DropdownItem onClick={() => setShowDropdown(false)} as={RouterLink} to="/orders">
                   Order History
                 </DropdownItem>
-                <DropdownItem onClick={() => { setShowDropdown(false); logout(); }}>
+                <DropdownItem onClick={handleLogout}>
                   Logout
                 </DropdownItem>
               </DropdownMenu>

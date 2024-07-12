@@ -4,23 +4,28 @@ const { Pool } = pg;
 
 let pool;
 
+async function createPool(credentials, sslCertPath) {
+  const ssl = process.env.USE_SSL === 'true' ? {
+    rejectUnauthorized: process.env.REJECT_UNAUTHORIZED !== 'false',
+    ca: readFileSync(sslCertPath).toString()
+  } : false;
+
+  return new Pool({
+    user: process.env.DB_USER || credentials.username,
+    host: process.env.DB_HOST || credentials.host,
+    database: process.env.DB_NAME || credentials.dbname,
+    password: process.env.DB_PASSWORD || credentials.password,
+    port: process.env.DB_PORT || credentials.port || 5432,
+    ssl: ssl,
+    connectionTimeoutMillis: 20000, // Increase timeout to 20 seconds
+    idleTimeoutMillis: 30000, // Idle client timeout
+    max: 10, // Maximum number of clients in the pool
+  });
+}
+
 export async function connectDatabase(credentials, sslCertPath) {
   try {
-    const ssl = process.env.USE_SSL === 'true' ? {
-      rejectUnauthorized: process.env.REJECT_UNAUTHORIZED !== 'false',
-      ca: readFileSync(sslCertPath).toString()
-    } : false;
-
-    pool = new Pool({
-      user: process.env.DB_USER || credentials.username,
-      host: process.env.DB_HOST || credentials.host,
-      database: process.env.DB_NAME || credentials.dbname,
-      password: process.env.DB_PASSWORD || credentials.password,
-      port: process.env.DB_PORT || credentials.port,
-      ssl: ssl
-    });
-
-    console.log('Database credentials:', credentials);
+    pool = await createPool(credentials, sslCertPath);
     console.log('Database pool created successfully');
   } catch (error) {
     console.error('Failed to create database pool:', error);
