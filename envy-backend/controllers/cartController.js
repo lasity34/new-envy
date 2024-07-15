@@ -21,7 +21,12 @@ export const addToCart = async (req, res) => {
     const userId = req.user.userId;
     const { id: product_id, quantity } = req.body;
 
-    const query = 'INSERT INTO cart (user_id, product_id, quantity) VALUES ($1, $2, $3) ON CONFLICT (user_id, product_id) DO UPDATE SET quantity = cart.quantity + EXCLUDED.quantity RETURNING *';
+    const query = `
+      INSERT INTO cart (user_id, product_id, quantity) 
+      VALUES ($1, $2, $3) 
+      ON CONFLICT (user_id, product_id) 
+      DO UPDATE SET quantity = cart.quantity + EXCLUDED.quantity
+      RETURNING *`;
     const values = [userId, product_id, quantity];
     const { rows } = await pool.query(query, values);
     res.json(rows[0]);
@@ -37,13 +42,16 @@ export const updateCartItem = async (req, res) => {
     const { id } = req.params;
     const { quantity } = req.body;
 
-    const query = 'UPDATE cart SET quantity = $1 WHERE user_id = $2 AND id = $3 RETURNING *';
+    const query = 'UPDATE cart SET quantity = $1 WHERE user_id = $2 AND product_id = $3 RETURNING *';
     const values = [quantity, userId, id];
     const { rows } = await pool.query(query, values);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Cart item not found' });
+    }
     res.json(rows[0]);
   } catch (error) {
     console.error('Error updating cart item:', error);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -52,26 +60,29 @@ export const removeFromCart = async (req, res) => {
     const userId = req.user.userId;
     const { id } = req.params;
 
-    const query = 'DELETE FROM cart WHERE user_id = $1 AND id = $2 RETURNING *';
+    const query = 'DELETE FROM cart WHERE user_id = $1 AND product_id = $2 RETURNING *';
     const values = [userId, id];
     const { rows } = await pool.query(query, values);
+    if (rows.length === 0) {
+      return res.status(404).json({ message: 'Cart item not found' });
+    }
     res.json(rows[0]);
   } catch (error) {
     console.error('Error removing cart item:', error);
-    res.status(500).send('Server error');
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
-export const clearCart = async (req) => {
+export const clearCart = async (req, res) => {
   try {
     const userId = req.user.userId;
 
     const query = 'DELETE FROM cart WHERE user_id = $1 RETURNING *';
     const { rows } = await pool.query(query, [userId]);
-    return rows;
+    res.json(rows);
   } catch (error) {
     console.error('Error clearing cart:', error);
-    throw new Error('Server error while clearing cart');
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
 
@@ -83,19 +94,15 @@ export const syncCart = async (req, res) => {
 
     await client.query('BEGIN');
 
-    if (items.length > 0) {
-      // Clear existing cart items only if there are new items to sync
-      await client.query('DELETE FROM cart WHERE user_id = $1', [userId]);
+    // Clear existing cart
+    await client.query('DELETE FROM cart WHERE user_id = $1', [userId]);
 
-      // Insert new cart items
-      const insertPromises = items.map(item => 
-        client.query(
-          'INSERT INTO cart (user_id, product_id, quantity) VALUES ($1, $2, $3) ON CONFLICT (user_id, product_id) DO UPDATE SET quantity = EXCLUDED.quantity',
-          [userId, item.id, item.quantity]
-        )
+    // Insert new cart items
+    for (let item of items) {
+      await client.query(
+        'INSERT INTO cart (user_id, product_id, quantity) VALUES ($1, $2, $3)',
+        [userId, item.id, item.quantity]
       );
-
-      await Promise.all(insertPromises);
     }
 
     await client.query('COMMIT');

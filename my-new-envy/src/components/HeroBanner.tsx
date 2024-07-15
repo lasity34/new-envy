@@ -1,54 +1,99 @@
+import React from 'react';
 import styled from 'styled-components';
 import { HashLink as Link } from 'react-router-hash-link';
 
-
 const BannerContainer = styled.div`
-  width: 100vw; // Ensures it takes the full viewport width
-  height: 100vh; // Sets the height to full viewport height
-  background-image: url('images/hero-background.png'); // Background image for the banner
-  background-size: cover; // Ensures the background covers the entire area
-  background-repeat: no-repeat; // No repetition of the background image
-  background-position: center center; // Centers the background image
+  width: 100%;
+  height: 60vh; // Reduced height for mobile
+  background-image: url('images/hero-background.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
   text-align: center;
   color: white;
-  position: relative; // Ensures proper positioning
-`;
+  position: relative;
 
-const Tagline = styled.h1`
-  font-size: 2.5rem; // Large font size for main tagline
-  margin-bottom: 20px; // Margin below the tagline
-  text-shadow: 2px 2px 8px rgba(0,0,0,0.7); // Text shadow for better legibility
-`;
-
-const ShopButton = styled(Link)`
-  padding: 10px 20px; // Padding for button size
-  color: white; // Text color
-  font-size: 1.5rem; // Font size for the text on the button
-  font-weight: normal; // Normal font weight for thinner text appearance
-  background-color: transparent; // Transparent background
-  border: 1px solid white; // Thin white border
-  border-radius: 20px; // Rounded corners for the button
-  text-decoration: none; // No text decoration
-  transition: background-color 0.3s, color 0.3s; // Smooth transition for hover effects
-
-  &:hover {
-    background-color: white;
-    color: black; // Text color changes on hover
+  @media (min-width: 768px) {
+    height: 80vh; // Taller on larger screens
   }
 `;
 
-const HeroBanner = () => {
+const Overlay = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4); // Darkens the background image
+`;
+
+const Content = styled.div`
+  z-index: 1;
+  padding: 0 20px;
+`;
+
+const Tagline = styled.h1`
+  font-size: 2rem;
+  margin-bottom: 20px;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.7);
+  font-family: "Playfair Display", serif;
+
+  @media (min-width: 768px) {
+    font-size: 2.5rem;
+  }
+`;
+
+const Subtitle = styled.p`
+  font-size: 1rem;
+  margin-bottom: 30px;
+  max-width: 600px;
+  line-height: 1.5;
+
+  @media (min-width: 768px) {
+    font-size: 1.2rem;
+  }
+`;
+
+const ShopButton = styled(Link)`
+  padding: 12px 24px;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: transparent;
+  border: 2px solid white;
+  border-radius: 30px;
+  text-decoration: none;
+  transition: background-color 0.3s, color 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  &:hover {
+    background-color: white;
+    color: black;
+  }
+
+  @media (min-width: 768px) {
+    font-size: 1.1rem;
+  }
+`;
+
+const HeroBanner: React.FC = () => {
   return (
     <BannerContainer>
-      <Tagline>Explore Our Exclusive Caps</Tagline>
-      <ShopButton to="/#featured" smooth>Shop Now</ShopButton> 
+      <Overlay />
+      <Content>
+        <Tagline>Elevate Your Style with Envy Caps</Tagline>
+        <Subtitle>
+          Discover our exclusive collection of premium caps, designed for those who dare to stand out.
+        </Subtitle>
+        <ShopButton to="/#featured" smooth>Shop Now</ShopButton>
+      </Content>
     </BannerContainer>
   );
 };
-
 
 export default HeroBanner;

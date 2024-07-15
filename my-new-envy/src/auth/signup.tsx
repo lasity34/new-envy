@@ -1,10 +1,8 @@
-// src/auth/Signup.tsx
-
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { useUser } from '../context/UserContext';
+import { useAppContext } from '../context/AppContext';
 import Notification from '../components/Notification';
 
 const Container = styled.div`
@@ -90,7 +88,7 @@ const Signup: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [notification, setNotification] = useState<NotificationState>({ message: '', show: false, type: 'success' });
-  const { setUser } = useUser();
+  const { setUser } = useAppContext();
   const navigate = useNavigate();
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -112,7 +110,6 @@ const Signup: React.FC = () => {
         setNotification({ message: 'An unknown error occurred', show: true, type: 'error' });
       }
 
-      // Hide notification after 5 seconds
       setTimeout(() => {
         setNotification({ ...notification, show: false });
       }, 5000);
@@ -145,13 +142,13 @@ const Signup: React.FC = () => {
             placeholder="Password"
             required 
           />
-          <Notification message={notification.message} show={notification.show} type={notification.type} />
           <ButtonContainer>
             <Button type="submit">Sign up</Button>
           </ButtonContainer>
         </Form>
         <Text>Already have an account? <StyledLink to="/login">Login here</StyledLink></Text>
       </FormWrapper>
+      <Notification message={notification.message} show={notification.show} type={notification.type} />
     </Container>
   );
 };

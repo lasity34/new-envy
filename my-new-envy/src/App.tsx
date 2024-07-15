@@ -1,13 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AppProvider } from "./context/AppContext";
 import Header from "./components/Header";
 import HeroBanner from "./components/HeroBanner";
 import FeaturedProducts from "./products/FeaturedProducts";
 import AboutUs from "./components/AboutUs";
 import ContactUs from "./components/ContactUs";
 import ProductDetails from "./products/ProductDetails";
-import { CartProvider } from "./context/CartContext";
-import { UserProvider } from "./context/UserContext";
 import ShoppingCart from './components/ShoppingCart';
 import Signup from './auth/signup';
 import Login from './auth/login';
@@ -20,7 +19,6 @@ import AdminProducts from './admin/AdminProducts';
 import MockPayment from './payments/MockPayment';
 import OrderConfirmation from './components/OrderConfirmation';
 import SyncCartComponent from './components/SyncCartComponent';
-
 
 const AppContent = () => {
   return (
@@ -66,12 +64,10 @@ const AppContent = () => {
 function App() {
   return (
     <Router>
-      <UserProvider>
-        <CartProvider>
-          <SyncCartComponent />
-          <AppContent />
-        </CartProvider>
-      </UserProvider>
+      <AppProvider>
+        <SyncCartComponent />
+        <AppContent />
+      </AppProvider>
     </Router>
   );
 }

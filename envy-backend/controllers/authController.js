@@ -14,8 +14,8 @@ export const signup = async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    if (!password) {
-      throw new Error('Password is required');
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: 'Username, email, and password are required' });
     }
 
     const existingUserByEmail = await getUserByEmail(email);
@@ -41,10 +41,17 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  const { identifier, password } = req.body; // Change to identifier
+  console.log('Login request body:', req.body);
+  const { identifier, password } = req.body;
 
   try {
-    // Check if identifier is an email or username
+    console.log('Login attempt with identifier:', identifier);
+
+    if (!identifier || !password) {
+      console.log('Missing identifier or password');
+      return res.status(400).json({ message: 'Identifier and password are required' });
+    }
+
     let user;
     if (identifier.includes('@')) {
       user = await getUserByEmail(identifier);
@@ -65,7 +72,7 @@ export const login = async (req, res) => {
     res.status(200).json({ message: 'Login successful', token, user: { id: user.id, username: user.username, email: user.email, role: user.role } });
   } catch (error) {
     console.error('Error logging in:', error);
-    res.status(500).json({ message: 'Error logging in', error: error.message });
+    res.status(500).json({ message: 'Error logging in', error: error.message, stack: error.stack });
   }
 };
 

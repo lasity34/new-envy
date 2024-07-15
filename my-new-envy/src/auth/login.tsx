@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { useUser } from '../context/UserContext';
-import { useCart } from '../context/CartContext';
+import { useAppContext } from '../context/AppContext';
 import Notification from '../components/Notification';
 
 const Container = styled.div`
@@ -91,7 +90,7 @@ const ForgotPasswordLink = styled(Link)`
 `;
 
 const Login: React.FC = () => {
-  const [identifier, setIdentifier] = useState(''); // Change to identifier
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [notification, setNotification] = useState<{ message: string; show: boolean; type: 'success' | 'error' }>({
     message: '',
@@ -99,26 +98,15 @@ const Login: React.FC = () => {
     type: 'success',
   });
 
-  const { setUser } = useUser();
-  const { syncLocalCartWithDatabase } = useCart();
+  const { login } = useAppContext();
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, { identifier, password });
-      localStorage.setItem('token', response.data.token);
-      setUser(response.data.user);
-
-  
-        await syncLocalCartWithDatabase();
-      
-
-      if (response.data.user.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
-      }
+      console.log('Login attempt with:', { identifier, password });
+      await login(identifier, password);
+      navigate('/');
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.message || 'Login failed';
@@ -138,10 +126,10 @@ const Login: React.FC = () => {
         <Title>Login</Title>
         <Form onSubmit={handleLogin}>
           <Input
-            type="text" // Change to text
+            type="text"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="Email or Username" // Update placeholder
+            placeholder="Email or Username"
             required
           />
           <Input

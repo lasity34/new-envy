@@ -1,86 +1,114 @@
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { HashLink as Link } from 'react-router-hash-link';
 import { CiUser } from 'react-icons/ci';
-import { MdOutlineShoppingBag, MdSettings } from 'react-icons/md'; // Import a settings icon
+import { MdOutlineShoppingBag, MdSettings, MdMenu, MdClose } from 'react-icons/md';
 import { useCart } from '../context/CartContext';
 import { useUser } from '../context/UserContext';
 import styled from 'styled-components';
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 const HeaderContainer = styled.header`
   font-family: "Caveat", cursive;
   color: black;
-  padding: 20px 40px;
+  padding: 10px 20px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   flex-direction: column;
   border-bottom: solid 1px #eceaea;
+
+  @media (min-width: 768px) {
+    padding: 20px 40px;
+  }
 `;
 
 const BannerContainer = styled.div`
   display: flex;
   justify-content: space-between;
+  align-items: center;
   width: 100%;
-`;
 
-const SearchContainer = styled.div`
-  width: 20%;
+  @media (min-width: 768px) {
+    justify-content: center;
+    position: relative;
+  }
 `;
 
 const LogoContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 125%;
 `;
 
 const AccountCartContainer = styled.div`
   display: flex;
-  align-items: center; // Ensure icons are vertically centered
+  align-items: center;
   list-style: none;
-  width: 30%; // Adjust width to fit the content
+
+  @media (min-width: 768px) {
+    position: absolute;
+    right: 0;
+  }
 `;
 
-const Nav = styled.nav`
+const MenuIconContainer = styled.div`
+  @media (min-width: 768px) {
+    position: absolute;
+    left: 0;
+  }
+`;
+
+const Nav = styled.nav<{ isOpen: boolean }>`
   width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-right: 8em;
+  display: ${props => props.isOpen ? 'flex' : 'none'};
+  flex-direction: column;
+  
+  @media (min-width: 768px) {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
 `;
 
 const NavLinks = styled.ul`
   list-style: none;
   display: flex;
-  font-size: 1.4rem;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    font-size: 1.4rem;
+  }
 `;
 
 const IconNavLinks = styled.ul`
   display: flex;
-  align-items: center; // Ensure icons are vertically centered
-  padding: 0; // Remove any padding that might cause a gap
+  align-items: center;
+  padding: 0;
 `;
 
 const IconNavLink = styled.li`
   list-style: none;
   color: black;
+  margin-left: 15px;
 
   a {
     color: black;
     text-decoration: none; 
     font-size: 1.9rem;
-    padding: 0 10px;
 
     &:hover {
-      color: black;
+      color: #433f3e;
     }
   }
 `;
 
 const NavLink = styled.li`
-  position: relative;
-  margin-left: 20px;
+  margin: 10px 0;
+
+  @media (min-width: 768px) {
+    margin: 0 0 0 20px;
+  }
 
   a {
     color: #433f3e;
@@ -111,7 +139,11 @@ const NavLink = styled.li`
 `;
 
 const CapImage = styled.img`
-  width: 150px;
+  width: 100px;
+
+  @media (min-width: 768px) {
+    width: 150px;
+  }
 `;
 
 const CartIconContainer = styled.div`
@@ -121,17 +153,15 @@ const CartIconContainer = styled.div`
 
 const ItemCountBadge = styled.span`
   position: absolute;
-  top: 15px;
-  right: 9px;
+  top: -8px;
+  right: -8px;
   background-color: black;
   color: white;
   border: 2px solid #333;
   font-size: 0.8rem;
-  padding: 1px 5px 1px 4px;
+  padding: 1px 5px;
   border-radius: 50%;
   font-weight: bold;
-  text-align center;
-  z-index: 1;
 `;
 
 const DropdownContainer = styled.div`
@@ -144,20 +174,19 @@ const DropdownContainer = styled.div`
 const DropdownIcon = styled(MdSettings)`
   font-size: 1.8rem;
   margin-left: 10px;
-  margin-bottom: 6px;
 `;
 
 const DropdownMenu = styled.div<{ show: boolean }>`
   position: absolute;
   top: calc(100% + 5px);
-  left: 0;
+  right: 0;
   background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   display: ${(props) => (props.show ? 'block' : 'none')};
-  width: 150px; /* Ensure the width is consistent */
+  width: 150px;
 `;
 
 const DropdownItem = styled.div`
@@ -165,8 +194,8 @@ const DropdownItem = styled.div`
   color: black;
   cursor: pointer;
   text-decoration: none;
-  white-space: nowrap; /* Ensure each item stays on one line */
-  display: block; /* Ensure items are stacked vertically */
+  white-space: nowrap;
+  display: block;
   position: relative;
 
   &::after {
@@ -188,11 +217,22 @@ const DropdownItem = styled.div`
   }
 `;
 
-const Header = () => {
+const MenuIcon = styled.div`
+  display: block;
+  font-size: 1.9rem;
+  cursor: pointer;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const Header: React.FC = () => {
   const location = useLocation();
-  const { state } = useCart();
+  const { state, clearCart } = useCart();
   const { user, logout } = useUser();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
@@ -201,6 +241,7 @@ const Header = () => {
   const hideNav = location.pathname.includes('/products/') || location.pathname === '/cart';
 
   const toggleDropdown = () => setShowDropdown(!showDropdown);
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleClickOutside = (event: MouseEvent) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -211,30 +252,29 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await logout();
+      clearCart();  // Clear the cart after successful logout
       setShowDropdown(false);
-      navigate('/'); // Redirect to home page after logout
+      navigate('/');
     } catch (error) {
       console.error('Error during logout:', error);
-      // Optionally, you can show an error message to the user here
-      // For example, using a toast notification or an alert
     }
   };
 
   useEffect(() => {
-    if (showDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    } else {
-      document.removeEventListener('mousedown', handleClickOutside);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showDropdown]);
+  }, []);
 
   return (
     <HeaderContainer>
       <BannerContainer>
-        <SearchContainer></SearchContainer>
+        <MenuIconContainer>
+          <MenuIcon onClick={toggleMenu}>
+            {isMenuOpen ? <MdClose /> : <MdMenu />}
+          </MenuIcon>
+        </MenuIconContainer>
         <LogoContainer>
           <RouterLink to="/">
             <CapImage src="images/logo.png" alt="Queue" />
@@ -279,23 +319,23 @@ const Header = () => {
         </AccountCartContainer>
       </BannerContainer>
       {!hideNav && (
-        <Nav>
+        <Nav isOpen={isMenuOpen}>
           <NavLinks>
-            <NavLink><RouterLink to="/">Home</RouterLink></NavLink>
+            <NavLink><RouterLink to="/" onClick={() => setIsMenuOpen(false)}>Home</RouterLink></NavLink>
             {isHomePage ? (
-              <NavLink><Link to="#featured" smooth>Shop</Link></NavLink>
+              <NavLink><Link to="#featured" smooth onClick={() => setIsMenuOpen(false)}>Shop</Link></NavLink>
             ) : (
-              <NavLink><RouterLink to="/#featured">Shop</RouterLink></NavLink>
+              <NavLink><RouterLink to="/#featured" onClick={() => setIsMenuOpen(false)}>Shop</RouterLink></NavLink>
             )}
             {isHomePage ? (
-              <NavLink><Link to="#about" smooth>About Us</Link></NavLink>
+              <NavLink><Link to="#about" smooth onClick={() => setIsMenuOpen(false)}>About Us</Link></NavLink>
             ) : (
-              <NavLink><RouterLink to="/#about">About Us</RouterLink></NavLink>
+              <NavLink><RouterLink to="/#about" onClick={() => setIsMenuOpen(false)}>About Us</RouterLink></NavLink>
             )}
             {isHomePage ? (
-              <NavLink><Link to="#contact" smooth>Contact</Link></NavLink>
+              <NavLink><Link to="#contact" smooth onClick={() => setIsMenuOpen(false)}>Contact</Link></NavLink>
             ) : (
-              <NavLink><RouterLink to="/#contact">Contact</RouterLink></NavLink>
+              <NavLink><RouterLink to="/#contact" onClick={() => setIsMenuOpen(false)}>Contact</RouterLink></NavLink>
             )}
           </NavLinks>
         </Nav>

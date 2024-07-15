@@ -1,8 +1,9 @@
-import React, { useEffect} from "react";
+import React, { useEffect } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { RiDeleteBinLine } from "react-icons/ri";
+import { useUser } from "../context/UserContext"; // Add this import
 
 const CartContainer = styled.div`
   display: flex;
@@ -150,17 +151,31 @@ const CheckoutButton = styled.button`
 `;
 
 const ShoppingCart: React.FC = () => {
-  const { state, dispatch } = useCart();
+  const { state, dispatch, removeFromCart, adjustQuantity, syncLocalCartWithDatabase } = useCart();
+  const { user } = useUser(); // Add this line
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (user) {
+      syncLocalCartWithDatabase();
+    }
+  }, [user, syncLocalCartWithDatabase]);
 
-  const handleRemove = (id: string) => {
-    dispatch({ type: "REMOVE_ITEM", payload: { id } });
+  const handleRemove = async (id: string) => {
+    if (user) {
+      await removeFromCart(id);
+    } else {
+      dispatch({ type: "REMOVE_ITEM", payload: { id } });
+    }
   };
 
-  const handleQuantityChange = (id: string, quantity: number) => {
+  const handleQuantityChange = async (id: string, quantity: number) => {
     if (quantity > 0) {
-      dispatch({ type: "ADJUST_QUANTITY", payload: { id, quantity } });
+      if (user) {
+        await adjustQuantity(id, quantity);
+      } else {
+        dispatch({ type: "ADJUST_QUANTITY", payload: { id, quantity } });
+      }
     }
   };
 

@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 
 const SyncCartComponent: React.FC = () => {
   const { user, initializeUser } = useUser();
-  const { syncLocalCartWithDatabase, state } = useCart();
+  const { syncLocalCartWithDatabase } = useCart();
   const initialSyncDone = useRef(false);
 
   useEffect(() => {
@@ -25,8 +25,6 @@ const SyncCartComponent: React.FC = () => {
   
     sync();
   }, [user, syncLocalCartWithDatabase]);
-
-
 
   return null;
 };
