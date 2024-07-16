@@ -95,6 +95,7 @@ const Signup: React.FC = () => {
     e.preventDefault();
     try {
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/signup`, { username, email, password });
+      localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       navigate('/');
     } catch (error: any) {
@@ -109,7 +110,7 @@ const Signup: React.FC = () => {
       } else {
         setNotification({ message: 'An unknown error occurred', show: true, type: 'error' });
       }
-
+  
       setTimeout(() => {
         setNotification({ ...notification, show: false });
       }, 5000);

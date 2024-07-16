@@ -7,13 +7,13 @@ interface User {
   id: number;
   username: string;
   email: string;
-  // Add other user properties as needed
+  role: string;
 }
 
 interface AppContextType {
   user: User | null;
   setUser: (user: User | null) => void;
-  login: (username: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   initializeUser: () => Promise<void>;
 }
@@ -25,15 +25,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const login = useCallback(async (username: string, password: string) => {
     try {
-      console.log('AppContext - Attempting login for user:', username);
-      console.log('AppContext - Login data:', { identifier: username, password });
       const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, { identifier: username, password });
-      console.log('AppContext - Login response:', response.data);
       
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       
-      console.log('AppContext - User set after login:', response.data.user);
+      return response.data.user;
     } catch (error) {
       console.error('AppContext - Login failed:', error);
       if (axios.isAxiosError(error)) {
@@ -58,7 +55,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       console.log('AppContext - Clearing user state and removing token');
       setUser(null);
       localStorage.removeItem('token');
-      // We'll handle cart clearing in CartContext
     }
   }, []);
 
@@ -69,8 +65,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         console.log('AppContext - Initializing user with stored token');
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/me`, {
           headers: { Authorization: `Bearer ${token}` }
-        });
-        console.log('AppContext - User data fetched:', response.data.user);
+        });;
         setUser(response.data.user);
       } catch (error) {
         console.error('AppContext - Failed to initialize user:', error);

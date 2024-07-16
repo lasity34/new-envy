@@ -1,18 +1,19 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAppContext } from './AppContext';
 
-interface UserContextType {
-  user: User | null;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  initializeUser: () => Promise<void>;
-}
-
 interface User {
   id: number;
   username: string;
   email: string;
+  role: string;
   // Add other user properties as needed
+}
+
+interface UserContextType {
+  user: User | null;
+  login: (username: string, password: string) => Promise<User>;
+  logout: () => Promise<void>;
+  initializeUser: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);

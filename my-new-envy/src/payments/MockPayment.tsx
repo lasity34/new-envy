@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
-import { useNavigate } from 'react-router-dom';
+import { useUser } from '../context/UserContext'; // Make sure this path is correct
+import { useNavigate, Link } from 'react-router-dom';
 import styled from 'styled-components';
-import axiosInstance from '../axiosInstance'; // Use axios instance
+import axiosInstance from '../axiosInstance';
+import { AxiosError } from 'axios';
 
 const formatExpiryDate = (value: string) => {
   const cleanedValue = value.replace(/\D/g, '');
@@ -24,14 +26,14 @@ const handleExpiryChange = (e: React.ChangeEvent<HTMLInputElement>, setUserData:
 };
 
 const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>, setUserData: React.Dispatch<React.SetStateAction<UserData>>) => {
-  const value = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+  const value = e.target.value.replace(/\D/g, '');
   if (value.length <= 16) {
     setUserData((prevData: UserData) => ({ ...prevData, cardNumber: value }));
   }
 };
 
 const handleCvcChange = (e: React.ChangeEvent<HTMLInputElement>, setUserData: React.Dispatch<React.SetStateAction<UserData>>) => {
-  const value = e.target.value.replace(/\D/g, ''); // Remove non-numeric characters
+  const value = e.target.value.replace(/\D/g, '');
   if (value.length <= 3) {
     setUserData((prevData: UserData) => ({ ...prevData, cvc: value }));
   }
@@ -102,8 +104,9 @@ type UserData = {
   cvc: string;
 };
 
-const MockPayment = () => {
+const MockPayment: React.FC = () => {
   const { state, clearLocalCart } = useCart();
+  const { user } = useUser();
   const [userData, setUserData] = useState<UserData>({
     firstName: '',
     lastName: '',
@@ -138,13 +141,22 @@ const MockPayment = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
+    if (!user) {
+      setError('Please log in to complete your order.');
+      return;
+    }
+  
     try {
       const response = await axiosInstance.post('/api/checkout/mock-checkout', {
-        userData,
+        userData: {
+          ...userData,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+        },
         cartItems: state.items,
       });
-
+  
       if (response.data.success) {
         if (saveInfo) {
           localStorage.setItem('userData', JSON.stringify(userData));
@@ -152,13 +164,21 @@ const MockPayment = () => {
           localStorage.removeItem('userData');
         }
         clearLocalCart();
-        navigate('/order-confirmation');
+        navigate(`/order-confirmation/${response.data.orderId}`);
       } else {
         setError('Checkout failed. Please try again.');
         console.error('Checkout failed');
       }
-    } catch (error) {
-      setError('Error processing the order. Please try again.');
+    }catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 401) {
+          setError('Please log in to complete your order.');
+        } else {
+          setError(`Error processing the order: ${error.message}`);
+        }
+      } else {
+        setError('An unexpected error occurred. Please try again.');
+      }
       console.error('Error processing the order:', error);
     }
   };
@@ -173,6 +193,11 @@ const MockPayment = () => {
   return (
     <CheckoutContainer>
       <CheckoutTitle>Checkout</CheckoutTitle>
+      {!user && (
+        <div style={{ color: 'red', marginBottom: '20px' }}>
+          Please <Link to="/login">log in</Link> to complete your order.
+        </div>
+      )}
       {error && <p style={{ color: 'red' }}>{error}</p>}
       <Form onSubmit={handleSubmit}>
         <Section>
@@ -228,7 +253,9 @@ const MockPayment = () => {
             />
           </div>
         </Section>
-        <Button type="submit">Mock Payment</Button>
+        <Button type="submit" disabled={!user}>
+          {user ? 'Complete Order' : 'Login to Checkout'}
+        </Button>
       </Form>
     </CheckoutContainer>
   );

@@ -5,7 +5,6 @@ interface User {
   id: number;
   username: string;
   email: string;
-  // Add other user properties as needed
 }
 
 interface CartItem {
@@ -46,8 +45,7 @@ interface CartContextType {
   adjustQuantity: (id: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   clearLocalCart: () => void;
-  syncLocalCartWithDatabase: () => Promise<void>;
-  mergeCartsOnLogin: () => Promise<void>;
+  mergeAnonymousCartWithUserCart: () => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -86,34 +84,17 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
 };
 
 export const CartProvider: React.FC<{ children: ReactNode; user: User | null }> = ({ children, user }) => {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] });
-
-  useEffect(() => {
-    if (!user) {
-      const savedItems = localStorage.getItem('cartItems');
-      if (savedItems) {
-        const parsedItems = JSON.parse(savedItems);
-        if (parsedItems.length > 0) {
-          dispatch({ type: 'SET_ITEMS', payload: parsedItems });
-        }
-      }
-    }
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) {
-      localStorage.setItem('cartItems', JSON.stringify(state.items));
-    }
-  }, [state.items, user]);
+  const [state, dispatch] = useReducer(cartReducer, { items: [] }, () => {
+    const savedItems = localStorage.getItem('cartItems');
+    return { items: savedItems ? JSON.parse(savedItems) : [] };
+  });
 
   const fetchCartFromServer = useCallback(async () => {
     if (user) {
       try {
-        console.log('CartContext - Fetching cart from server');
         const response = await axios.get<SyncedCartItem[]>(`${process.env.REACT_APP_API_URL}/api/cart`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-        console.log('CartContext - Server response:', response.data);
         const cartItems: CartItem[] = response.data.map(item => ({
           id: item.product_id.toString(),
           name: item.product_name,
@@ -129,32 +110,20 @@ export const CartProvider: React.FC<{ children: ReactNode; user: User | null }> 
     }
   }, [user]);
 
-
-  useEffect(() => {
+  const mergeAnonymousCartWithUserCart = useCallback(async () => {
     if (user) {
-      fetchCartFromServer();
-    } else {
-      // Clear cart when user logs out
-      dispatch({ type: 'CLEAR_CART' });
-      localStorage.removeItem('cartItems');
-    }
-  }, [user]);
-
-  const syncLocalCartWithDatabase = useCallback(async () => {
-    if (user) {
-      try {
-        console.log('CartContext - Syncing local cart with database');
-        const localItems: CartItem[] = JSON.parse(localStorage.getItem('cartItems') || '[]');
-        console.log('Local items before sync:', localItems);
-        
-        if (localItems.length > 0) {
-          const response = await axios.post<SyncedCartItem[]>(`${process.env.REACT_APP_API_URL}/api/cart/sync`, 
-            { items: localItems.map(item => ({ id: item.id, quantity: item.quantity })) },
+      const anonymousCartItems: CartItem[] = JSON.parse(localStorage.getItem('cartItems') || '[]');
+      if (anonymousCartItems.length > 0) {
+        try {
+          console.log('CartContext - Merging anonymous cart with user cart');
+          const response = await axios.post<SyncedCartItem[]>(
+            `${process.env.REACT_APP_API_URL}/api/cart/merge`,
+            { items: anonymousCartItems },
             { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
           );
-          console.log('Server response:', response.data);
+          console.log('CartContext - Merge response:', response.data);
   
-          const payload = response.data.map(item => ({
+          const mergedItems: CartItem[] = response.data.map(item => ({
             id: item.product_id.toString(),
             name: item.product_name,
             price: parseFloat(item.price),
@@ -163,44 +132,41 @@ export const CartProvider: React.FC<{ children: ReactNode; user: User | null }> 
             stock: item.stock
           }));
   
-          console.log('Items after sync:', payload);
-          if (payload.length > 0) {
-            dispatch({ type: 'SET_ITEMS', payload });
-          }
-        } else {
-          await fetchCartFromServer();
-        }
-      } catch (error) {
-        console.error('CartContext - Failed to sync cart with database:', error);
-      }
-    }
-  }, [user, fetchCartFromServer]);
-
-  const mergeCartsOnLogin = useCallback(async () => {
-    if (user) {
-      const localItems: CartItem[] = JSON.parse(localStorage.getItem('cartItems') || '[]');
-      if (localItems.length > 0) {
-        try {
-          await syncLocalCartWithDatabase();
-          localStorage.removeItem('cartItems');
+          dispatch({ type: 'SET_ITEMS', payload: mergedItems });
+          localStorage.removeItem('cartItems'); // Clear anonymous cart after merging
         } catch (error) {
-          console.error('Failed to merge carts on login:', error);
+          console.error('CartContext - Failed to merge carts:', error);
         }
       } else {
         await fetchCartFromServer();
       }
     }
-  }, [user, syncLocalCartWithDatabase, fetchCartFromServer]);
-
+  }, [user, fetchCartFromServer]);
+  
   useEffect(() => {
     if (user) {
-      mergeCartsOnLogin();
+      const anonymousCartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+      if (anonymousCartItems.length > 0) {
+        mergeAnonymousCartWithUserCart();
+      } else {
+        fetchCartFromServer();
+      }
+    } else {
+      const savedItems = localStorage.getItem('cartItems');
+      if (savedItems) {
+        dispatch({ type: 'SET_ITEMS', payload: JSON.parse(savedItems) });
+      }
     }
-  }, [user, mergeCartsOnLogin]);
+  }, [user, mergeAnonymousCartWithUserCart, fetchCartFromServer]);
+
+  useEffect(() => {
+    localStorage.setItem('cartItems', JSON.stringify(state.items));
+  }, [state.items]);
 
   const addToCart = useCallback(async (item: CartItem) => {
     console.log('CartContext - Adding item to cart:', item);
     dispatch({ type: 'ADD_ITEM', payload: item });
+    localStorage.setItem('cartItems', JSON.stringify([...state.items, item]));
     if (user) {
       try {
         await axios.post(`${process.env.REACT_APP_API_URL}/api/cart/add`, {
@@ -211,14 +177,15 @@ export const CartProvider: React.FC<{ children: ReactNode; user: User | null }> 
         });
       } catch (error) {
         console.error('CartContext - Failed to add item to cart:', error);
-        // Revert the local change if the server request fails
         dispatch({ type: 'REMOVE_ITEM', payload: { id: item.id } });
+        localStorage.setItem('cartItems', JSON.stringify(state.items.filter(i => i.id !== item.id)));
       }
     }
-  }, [user]);
+  }, [user, state.items]);
 
   const removeFromCart = useCallback(async (id: string) => {
     dispatch({ type: 'REMOVE_ITEM', payload: { id } });
+    localStorage.setItem('cartItems', JSON.stringify(state.items.filter(item => item.id !== id)));
     if (user) {
       try {
         await axios.delete(`${process.env.REACT_APP_API_URL}/api/cart/${id}`, {
@@ -226,17 +193,20 @@ export const CartProvider: React.FC<{ children: ReactNode; user: User | null }> 
         });
       } catch (error) {
         console.error('Failed to remove item from cart:', error);
-        // Revert the local change if the server request fails
         const item = state.items.find(item => item.id === id);
         if (item) {
           dispatch({ type: 'ADD_ITEM', payload: item });
+          localStorage.setItem('cartItems', JSON.stringify([...state.items, item]));
         }
       }
     }
   }, [user, state.items]);
-
+  
   const adjustQuantity = useCallback(async (id: string, quantity: number) => {
     dispatch({ type: 'ADJUST_QUANTITY', payload: { id, quantity } });
+    localStorage.setItem('cartItems', JSON.stringify(state.items.map(item => 
+      item.id === id ? { ...item, quantity } : item
+    )));
     if (user) {
       try {
         await axios.put(`${process.env.REACT_APP_API_URL}/api/cart/${id}`, { quantity }, {
@@ -244,10 +214,10 @@ export const CartProvider: React.FC<{ children: ReactNode; user: User | null }> 
         });
       } catch (error) {
         console.error('Failed to adjust quantity:', error);
-        // Revert the local change if the server request fails
         const item = state.items.find(item => item.id === id);
         if (item) {
           dispatch({ type: 'ADJUST_QUANTITY', payload: { id, quantity: item.quantity } });
+          localStorage.setItem('cartItems', JSON.stringify(state.items));
         }
       }
     }
@@ -258,17 +228,19 @@ export const CartProvider: React.FC<{ children: ReactNode; user: User | null }> 
     dispatch({ type: 'CLEAR_CART' });
     localStorage.removeItem('cartItems');
   }, []);
-
+  
   const clearCart = useCallback(async () => {
-    console.log('CartContext - Clearing cart');
     dispatch({ type: 'CLEAR_CART' });
     if (user) {
-      try {
-        await axios.delete(`${process.env.REACT_APP_API_URL}/api/cart`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-      } catch (error) {
-        console.error('CartContext - Failed to clear cart:', error);
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          await axios.delete(`${process.env.REACT_APP_API_URL}/api/cart`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (error) {
+          console.error('CartContext - Failed to clear cart:', error);
+        }
       }
     }
     localStorage.removeItem('cartItems');
@@ -283,8 +255,7 @@ export const CartProvider: React.FC<{ children: ReactNode; user: User | null }> 
       adjustQuantity, 
       clearCart,
       clearLocalCart,
-      syncLocalCartWithDatabase,
-      mergeCartsOnLogin
+      mergeAnonymousCartWithUserCart
     }}>
       {children}
     </CartContext.Provider>

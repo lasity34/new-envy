@@ -1,7 +1,7 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import styled from 'styled-components';
-import { MdCategory, MdPeople, MdHistory } from 'react-icons/md';
+import React from "react";
+import { Link } from "react-router-dom";
+import styled from "styled-components";
+import { MdCategory, MdPeople, MdHistory } from "react-icons/md";
 
 const Container = styled.div`
   display: flex;
@@ -69,7 +69,7 @@ const GeneralAdminPage: React.FC = () => {
           <IconContainer>
             <MdHistory />
           </IconContainer>
-          Order History
+          Order Management
         </AdminLink>
       </LinkContainer>
     </Container>

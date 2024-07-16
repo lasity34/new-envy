@@ -56,9 +56,9 @@ const MenuIconContainer = styled.div`
   }
 `;
 
-const Nav = styled.nav<{ isOpen: boolean }>`
+const Nav = styled.nav<{ $isOpen: boolean }>`
   width: 100%;
-  display: ${props => props.isOpen ? 'flex' : 'none'};
+  display: ${props => props.$isOpen ? 'flex' : 'none'};
   flex-direction: column;
   
   @media (min-width: 768px) {
@@ -176,7 +176,7 @@ const DropdownIcon = styled(MdSettings)`
   margin-left: 10px;
 `;
 
-const DropdownMenu = styled.div<{ show: boolean }>`
+const DropdownMenu = styled.div<{ $show: boolean }>`
   position: absolute;
   top: calc(100% + 5px);
   right: 0;
@@ -185,7 +185,7 @@ const DropdownMenu = styled.div<{ show: boolean }>`
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  display: ${(props) => (props.show ? 'block' : 'none')};
+  display: ${(props) => (props.$show ? 'block' : 'none')};
   width: 150px;
 `;
 
@@ -284,7 +284,7 @@ const Header: React.FC = () => {
           {user && (
             <DropdownContainer onClick={toggleDropdown} ref={dropdownRef}>
               <DropdownIcon />
-              <DropdownMenu show={showDropdown}>
+              <DropdownMenu $show={showDropdown}>
                 <DropdownItem onClick={() => setShowDropdown(false)} as={RouterLink} to="/account">
                   Account Details
                 </DropdownItem>
@@ -319,7 +319,7 @@ const Header: React.FC = () => {
         </AccountCartContainer>
       </BannerContainer>
       {!hideNav && (
-        <Nav isOpen={isMenuOpen}>
+     <Nav $isOpen={isMenuOpen}>
           <NavLinks>
             <NavLink><RouterLink to="/" onClick={() => setIsMenuOpen(false)}>Home</RouterLink></NavLink>
             {isHomePage ? (

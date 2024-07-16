@@ -26,7 +26,6 @@ async function createPool(credentials, sslCertPath) {
 export async function connectDatabase(credentials, sslCertPath) {
   try {
     pool = await createPool(credentials, sslCertPath);
-    console.log('Database pool created successfully');
   } catch (error) {
     console.error('Failed to create database pool:', error);
     throw error;

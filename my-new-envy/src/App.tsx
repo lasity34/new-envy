@@ -18,7 +18,9 @@ import GeneralAdminPage from './admin/GeneralAdminPage';
 import AdminProducts from './admin/AdminProducts';
 import MockPayment from './payments/MockPayment';
 import OrderConfirmation from './components/OrderConfirmation';
+import OrderHistory from './components/OrderHistory';
 import SyncCartComponent from './components/SyncCartComponent';
+import AdminOrders from './admin/AdminOrders';
 
 const AppContent = () => {
   return (
@@ -48,7 +50,8 @@ const AppContent = () => {
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<ShoppingCart />} />
         <Route path="/checkout" element={<MockPayment />} />
-        <Route path="/order-confirmation" element={<OrderConfirmation />} />
+        <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+        <Route path="/order-history" element={<PrivateRoute path="/order-history" element={<OrderHistory />} />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -56,6 +59,7 @@ const AppContent = () => {
         <Route path="/dashboard" element={<PrivateRoute path="/dashboard" element={<Dashboard />} />} />
         <Route path="/admin/dashboard" element={<PrivateRoute path="/admin/dashboard" element={<GeneralAdminPage />} />} />
         <Route path="/admin/products" element={<PrivateRoute path="/admin/products" element={<AdminProducts />} />} />
+        <Route path="/admin/orders" element={<PrivateRoute path="/admin/orders" element={<AdminOrders />} />} />
       </Routes>
     </div>
   );

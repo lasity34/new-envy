@@ -33,7 +33,16 @@ export const signup = async (req, res) => {
 
     const token = generateToken(newUser.id, newUser.role);
 
-    res.status(201).json({ message: 'User created successfully', token, user: { id: newUser.id, username: newUser.username, email: newUser.email, role: newUser.role } });
+    res.status(201).json({ 
+      message: 'User created successfully', 
+      token, 
+      user: { 
+        id: newUser.id, 
+        username: newUser.username, 
+        email: newUser.email, 
+        role: newUser.role 
+      } 
+    });
   } catch (error) {
     console.error('Error creating user:', error);
     res.status(500).json({ message: 'Error creating user', error: error.message });
@@ -69,7 +78,16 @@ export const login = async (req, res) => {
     }
 
     const token = generateToken(user.id, user.role);
-    res.status(200).json({ message: 'Login successful', token, user: { id: user.id, username: user.username, email: user.email, role: user.role } });
+    res.status(200).json({ 
+      message: 'Login successful', 
+      token, 
+      user: { 
+        id: user.id, 
+        username: user.username, 
+        email: user.email, 
+        role: user.role 
+      } 
+    });
   } catch (error) {
     console.error('Error logging in:', error);
     res.status(500).json({ message: 'Error logging in', error: error.message, stack: error.stack });
@@ -121,16 +139,16 @@ export const forgotPassword = async (req, res) => {
     };
 
     try {
-      console.log('Sending email to:', user.email); // Debugging log
+      console.log('Sending email to:', user.email);
       await sgMail.send(msg);
-      console.log('Email sent successfully'); // Debugging log
+      console.log('Email sent successfully');
       res.status(200).json({ message: 'Password reset email sent' });
     } catch (error) {
-      console.error('Error sending email:', error); // Log the error
+      console.error('Error sending email:', error);
       res.status(500).json({ message: 'Error sending email', error: error.message });
     }
   } catch (error) {
-    console.error('Error in forgotPassword:', error); // Log the error
+    console.error('Error in forgotPassword:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
@@ -153,14 +171,11 @@ export const resetPassword = async (req, res) => {
 
     res.status(200).json({ message: 'Password has been reset' });
   } catch (error) {
-    console.error('Error in resetPassword:', error); // Log the error
+    console.error('Error in resetPassword:', error);
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 };
 
-
 export const logout = async (req, res) => {
-  // Since JWT is stateless, we don't need to do anything server-side
-  // We'll just send a success response
   res.status(200).json({ message: 'Logged out successfully' });
 };

@@ -18,7 +18,7 @@ const AboutSection = styled.section`
   }
 `;
 
-const Section = styled.div<{ imageRight: boolean }>`
+const Section = styled.div<{ $imageRight: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,7 +26,7 @@ const Section = styled.div<{ imageRight: boolean }>`
   animation: ${fadeIn} 0.5s ease-out;
 
   @media (min-width: 768px) {
-    flex-direction: ${({ imageRight }) => (imageRight ? "row-reverse" : "row")};
+    flex-direction: ${({ $imageRight }) => ($imageRight ? "row-reverse" : "row")};
     justify-content: center;
   }
 `;
@@ -129,7 +129,7 @@ const AboutUs: React.FC = () => {
   return (
     <AboutSection>
       <SectionHeader>About Us</SectionHeader>
-      <Section imageRight={true}>
+      <Section $imageRight={true}>
         <ImageContainer>
           <StyledImage
             src="/images/mission.jpg"
@@ -149,7 +149,7 @@ const AboutUs: React.FC = () => {
           </Content>
         </ContentContainer>
       </Section>
-      <Section imageRight={false}>
+      <Section $imageRight={false}>
         <ImageContainer>
           <StyledImage
             src="/images/innovation.jpg"
@@ -169,7 +169,7 @@ const AboutUs: React.FC = () => {
           </Content>
         </ContentContainer>
       </Section>
-      <Section imageRight={true}>
+      <Section $imageRight={true}>
         <ImageContainer>
           <StyledImage
             src="/images/quality.jpg"

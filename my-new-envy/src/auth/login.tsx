@@ -105,8 +105,12 @@ const Login: React.FC = () => {
     e.preventDefault();
     try {
       console.log('Login attempt with:', { identifier, password });
-      await login(identifier, password);
-      navigate('/');
+      const user = await login(identifier, password);
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       if (axios.isAxiosError(error)) {
         const errorMessage = error.response?.data.message || 'Login failed';

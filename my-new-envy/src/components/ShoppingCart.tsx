@@ -151,15 +151,15 @@ const CheckoutButton = styled.button`
 `;
 
 const ShoppingCart: React.FC = () => {
-  const { state, dispatch, removeFromCart, adjustQuantity, syncLocalCartWithDatabase } = useCart();
+  const { state, dispatch, removeFromCart, adjustQuantity, mergeAnonymousCartWithUserCart } = useCart();
   const { user } = useUser(); // Add this line
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
-      syncLocalCartWithDatabase();
+      mergeAnonymousCartWithUserCart();
     }
-  }, [user, syncLocalCartWithDatabase]);
+  }, [user, mergeAnonymousCartWithUserCart]);
 
   const handleRemove = async (id: string) => {
     if (user) {

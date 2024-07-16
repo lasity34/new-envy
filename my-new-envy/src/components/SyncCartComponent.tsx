@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext';
 
 const SyncCartComponent: React.FC = () => {
   const { user, initializeUser } = useUser();
-  const { syncLocalCartWithDatabase } = useCart();
+  const { mergeAnonymousCartWithUserCart } = useCart();
   const initialSyncDone = useRef(false);
 
   useEffect(() => {
@@ -18,13 +18,13 @@ const SyncCartComponent: React.FC = () => {
   useEffect(() => {
     const sync = async () => {
       if (user && !initialSyncDone.current) {
-        await syncLocalCartWithDatabase();
+        await mergeAnonymousCartWithUserCart();
         initialSyncDone.current = true;
       }
     };
   
     sync();
-  }, [user, syncLocalCartWithDatabase]);
+  }, [user, mergeAnonymousCartWithUserCart]);
 
   return null;
 };

@@ -86,7 +86,7 @@ export const clearCart = async (req, res) => {
   }
 };
 
-export const syncCart = async (req, res) => {
+export const mergeCart = async (req, res) => {
   const client = await pool.connect();
   try {
     const userId = req.user.userId;
@@ -94,15 +94,14 @@ export const syncCart = async (req, res) => {
 
     await client.query('BEGIN');
 
-    // Clear existing cart
-    await client.query('DELETE FROM cart WHERE user_id = $1', [userId]);
-
-    // Insert new cart items
+    // Use an UPSERT operation for each item
     for (let item of items) {
-      await client.query(
-        'INSERT INTO cart (user_id, product_id, quantity) VALUES ($1, $2, $3)',
-        [userId, item.id, item.quantity]
-      );
+      await client.query(`
+        INSERT INTO cart (user_id, product_id, quantity)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id, product_id)
+        DO UPDATE SET quantity = GREATEST(cart.quantity, EXCLUDED.quantity)
+      `, [userId, item.id, item.quantity]);
     }
 
     await client.query('COMMIT');
@@ -118,7 +117,7 @@ export const syncCart = async (req, res) => {
     res.status(200).json(rows);
   } catch (error) {
     await client.query('ROLLBACK');
-    console.error('Error syncing cart:', error);
+    console.error('Error merging cart:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   } finally {
     client.release();

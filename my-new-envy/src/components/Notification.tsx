@@ -4,8 +4,8 @@ import React from 'react';
 import styled from 'styled-components';
 import { AiOutlineCheckCircle, AiOutlineCloseCircle } from 'react-icons/ai';
 
-const NotificationContainer = styled.div<{ show: boolean; type: 'success' | 'error' }>`
-  display: ${(props) => (props.show ? 'flex' : 'none')};
+const NotificationContainer = styled.div<{ $show: boolean; type: 'success' | 'error' }>`
+  display: ${(props) => (props.$show ? 'flex' : 'none')};
   align-items: center;
   color: ${(props) => (props.type === 'success' ? 'green' : 'red')};
   padding: 8px;
@@ -29,7 +29,7 @@ interface NotificationProps {
 
 const Notification: React.FC<NotificationProps> = ({ message, show, type }) => {
   return (
-    <NotificationContainer show={show} type={type}>
+    <NotificationContainer $show={show} type={type}>
       <IconContainer>
         {type === 'success' ? <AiOutlineCheckCircle size={24} /> : <AiOutlineCloseCircle size={24} />}
       </IconContainer>
