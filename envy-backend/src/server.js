@@ -14,9 +14,8 @@ import { authenticate, authenticateAdmin } from '../middleware/auth.js';
 dotenvConfig();
 
 const requiredEnvVariables = [
-  'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_REGION',
-  'DB_SECRET_ID', 'S3_BUCKET_NAME', 'KEY', 'USE_SSL', 'JWT_SECRET',
-  'EMAIL_USER',
+  'AWS_REGION', 'S3_BUCKET_NAME', 'SECRETS_ARN', 'USE_SSL', 'KEY',
+  'DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER'
 ];
 
 for (const varName of requiredEnvVariables) {
@@ -30,26 +29,66 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-  origin: 'http://localhost:3000', // Adjust this to your frontend's URL
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Setup multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
 async function initializeApp() {
   try {
-    const credentials = await getSecret(process.env.DB_SECRET_ID);
+    const secrets = await getSecret();
+    
+    console.log('Retrieved secrets:', Object.keys(secrets));
 
-    const sslCertPath = process.env.USE_SSL === 'true' ? 
-      await downloadFileFromS3(process.env.S3_BUCKET_NAME, process.env.KEY, 'C:/tmp/global-bundle.pem') : 
-      null;
+    // Set sensitive environment variables from secrets
+    process.env.DB_PASSWORD = secrets.DB_PASSWORD;
+    process.env.JWT_SECRET = secrets.JWT_SECRET;
+    process.env.SENDGRID_API_KEY = secrets.SENDGRID_API_KEY;
 
-    await connectDatabase(credentials, sslCertPath);
+    // Check for SendGrid API key
+    if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith("SG.")) {
+      console.log("SendGrid API key set successfully");
+    } else {
+      console.warn("Warning: Invalid or missing SendGrid API key in secrets. Email functionality may not work.");
+    }
+
+    // Log database connection details (excluding password)
+    console.log('Database connection details:', {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT,
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER
+    });
+
+    // Ensure DB_PORT is a number
+    const dbPort = parseInt(process.env.DB_PORT, 10);
+    if (isNaN(dbPort)) {
+      throw new Error(`Invalid DB_PORT: ${process.env.DB_PORT}`);
+    }
+
+    let sslCertPath = null;
+    if (process.env.USE_SSL === 'true') {
+      try {
+        sslCertPath = await downloadFileFromS3(process.env.S3_BUCKET_NAME, process.env.KEY, '/tmp/global-bundle.pem');
+      } catch (error) {
+        console.warn('Warning: Error downloading SSL certificate. SSL may not be enabled.', error);
+      }
+    }
+
+    await connectDatabase({
+      username: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      host: process.env.DB_HOST,
+      port: dbPort,
+      dbname: process.env.DB_NAME
+    }, sslCertPath);
+
+    console.log('Application initialized successfully');
   } catch (error) {
     console.error('Failed to initialize the application:', error);
     process.exit(1);
@@ -60,7 +99,6 @@ app.get('/', (req, res) => {
   res.send('Hello from Envy backend!');
 });
 
-// Use multer upload middleware for the upload endpoint
 app.post('/api/products/upload', authenticateAdmin, upload.single('image'), async (req, res) => {
   try {
     const file = req.file;
@@ -86,12 +124,15 @@ app.get('/api/protected', authenticate, (req, res) => {
   res.json({ message: 'This is a protected route' });
 });
 
-// Example admin route
 app.get('/api/admin/protected', authenticateAdmin, (req, res) => {
   res.json({ message: 'This is an admin protected route' });
 });
 
-app.listen(PORT, async () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  await initializeApp();
+initializeApp().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}).catch(error => {
+  console.error('Failed to start the server:', error);
+  process.exit(1);
 });
