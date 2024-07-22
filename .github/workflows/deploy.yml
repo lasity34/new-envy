@@ -9,41 +9,41 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'  # Make sure this matches your project's Node version
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # Make sure this matches your project's Node version
 
-    - name: Install dependencies
-       run: |
-            cd my-new-envy
-            npm --version
-            node --version
-            npm ci --verbose
+      - name: Install dependencies
+        run: |
+          cd my-new-envy
+          npm --version
+          node --version
+          npm ci --verbose
 
-    - name: Build application
-      run: |
-        cd my-new-envy  # This is correct
-        npm run build
-      env:
-        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+      - name: Build application
+        run: |
+          cd my-new-envy  # This is correct
+          npm run build
+        env:
+          REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Deploy to S3
-      run: |
-        aws s3 sync my-new-envy/build/ s3://${{ secrets.S3_BUCKET }} --delete
-      # This line was changed from 'envy-frontend/build/' to 'my-new-envy/build/'
+      - name: Deploy to S3
+        run: |
+          aws s3 sync my-new-envy/build/ s3://${{ secrets.S3_BUCKET }} --delete
 
-    - name: Invalidate CloudFront
-      run: |
-        aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+      - name: Invalidate CloudFront
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
