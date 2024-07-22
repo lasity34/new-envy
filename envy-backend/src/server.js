@@ -95,6 +95,23 @@ async function initializeApp() {
   }
 }
 
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
 app.get('/', (req, res) => {
   res.send('Hello from Envy backend!');
 });
@@ -129,8 +146,8 @@ app.get('/api/admin/protected', authenticateAdmin, (req, res) => {
 });
 
 initializeApp().then(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }).catch(error => {
   console.error('Failed to start the server:', error);
