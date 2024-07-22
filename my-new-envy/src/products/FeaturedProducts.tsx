@@ -43,7 +43,7 @@ const FeaturedProducts: React.FC = () => {
 
     return (
         <>
-            <SectionHeader>New Arrivals!!!</SectionHeader>
+            <SectionHeader>New Arrivals!!!!</SectionHeader>
             {error ? (
                 <p>{error}</p>
             ) : (
