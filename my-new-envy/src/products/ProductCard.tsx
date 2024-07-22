@@ -47,7 +47,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <CardContainer to={`/products/${product.id}`}>
             <ProductImage src={product.imageUrl} alt={product.name} />
             <ProductName>{product.name}</ProductName>
-            <ProductPrice>R {product.price}.00</ProductPrice>
+            <ProductPrice>R {product.price}</ProductPrice>
         </CardContainer>
     );
 }

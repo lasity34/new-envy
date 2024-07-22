@@ -1,0 +1,47 @@
+name: Deploy Frontend to AWS
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'envy-frontend/**'  # Adjust this path if your frontend code is in a different directory
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'  # Adjust if you're using a different version
+
+    - name: Install dependencies
+      run: |
+        cd envy-frontend  # Adjust this if your frontend directory has a different name
+        npm ci
+
+    - name: Build application
+      run: |
+        cd envy-frontend  # Adjust this if your frontend directory has a different name
+        npm run build
+      env:
+        REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Deploy to S3
+      run: |
+        aws s3 sync envy-frontend/build/ s3://${{ secrets.S3_BUCKET }} --delete
+      # Adjust 'envy-frontend/build/' if your build output directory is different
+
+    - name: Invalidate CloudFront
+      run: |
+        aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
