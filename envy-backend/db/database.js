@@ -5,6 +5,14 @@ const { Pool } = pg;
 let pool;
 
 async function createPool(credentials, sslCertPath) {
+  console.log('Creating database pool with:', {
+    user: process.env.DB_USER || credentials.username,
+    host: process.env.DB_HOST || credentials.host,
+    database: process.env.DB_NAME || credentials.dbname,
+    port: process.env.DB_PORT || credentials.port || 5432,
+    ssl: process.env.USE_SSL === 'true' ? 'enabled' : 'disabled'
+  });
+
   const ssl = process.env.USE_SSL === 'true' ? {
     rejectUnauthorized: process.env.REJECT_UNAUTHORIZED !== 'false',
     ca: readFileSync(sslCertPath).toString()
@@ -17,15 +25,28 @@ async function createPool(credentials, sslCertPath) {
     password: process.env.DB_PASSWORD || credentials.password,
     port: process.env.DB_PORT || credentials.port || 5432,
     ssl: ssl,
-    connectionTimeoutMillis: 20000, // Increase timeout to 20 seconds
-    idleTimeoutMillis: 30000, // Idle client timeout
-    max: 10, // Maximum number of clients in the pool
+    connectionTimeoutMillis: 60000, // Increase timeout to 30 seconds
+    idleTimeoutMillis: 60000, // Increase idle timeout to 60 seconds
+    max: 5, // Reduce max connections to 5
   });
 }
 
 export async function connectDatabase(credentials, sslCertPath) {
   try {
     pool = await createPool(credentials, sslCertPath);
+    
+    pool.on('error', (err, client) => {
+      console.error('Unexpected error on idle client', err);
+    });
+
+    // Test the connection
+    const client = await pool.connect();
+    try {
+      await client.query('SELECT NOW()');
+      console.log('Database connection successful');
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error('Failed to create database pool:', error);
     throw error;
@@ -34,23 +55,52 @@ export async function connectDatabase(credentials, sslCertPath) {
 
 const executeQuery = async (query, params = []) => {
   if (!pool) {
+    console.error('Database pool is not initialized');
     throw new Error('Database pool is not initialized');
   }
+  const client = await pool.connect();
   try {
-    const { rows } = await pool.query(query, params);
-    return rows;
+    console.log('Executing query:', query, 'with params:', params);
+    const start = Date.now();
+    const result = await client.query(query, params);
+    const duration = Date.now() - start;
+    console.log(`Query executed successfully in ${duration}ms, returned ${result.rows.length} rows`);
+    return result.rows;
   } catch (error) {
-    console.error('Error executing query:', query, params, error);
+    console.error('Error executing query:', query, 'with params:', params, 'Error:', error);
     throw error;
+  } finally {
+    client.release();
   }
 };
 
+export async function checkDatabaseConnection() {
+  if (!pool) {
+    console.error('Database pool is not initialized');
+    return false;
+  }
+  try {
+    const client = await pool.connect();
+    try {
+      await client.query('SELECT NOW()');
+      return true;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Database connection check failed:', error);
+    return false;
+  }
+}
+
 export async function getProducts() {
+  console.log('Fetching all products');
   const query = 'SELECT id, name, description, price, stock, imageUrl as "imageUrl" FROM products';
   return await executeQuery(query);
 }
 
 export async function getProductById(id) {
+  console.log(`Fetching product with id: ${id}`);
   const query = 'SELECT id, name, description, price, stock, imageUrl as "imageUrl" FROM products WHERE id = $1';
   return (await executeQuery(query, [id]))[0];
 }
