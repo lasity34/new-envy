@@ -24,6 +24,7 @@ const SectionHeader = styled.h2`
 `;
 
 const FeaturedProducts: React.FC = () => {
+    console.log('API URL:', process.env.REACT_APP_API_URL);
     const [products, setProducts] = useState<Product[]>([]);
     const [error, setError] = useState<string | null>(null);
 
