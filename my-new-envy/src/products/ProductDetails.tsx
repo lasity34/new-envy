@@ -7,9 +7,7 @@ import styled from "styled-components";
 import { MdCheck } from "react-icons/md";
 import { Product, CartItem } from "../types/types";
 
-interface SuccessMessageProps {
-  visible: boolean;
-}
+
 
 const DetailsContainer = styled.div`
   display: flex;
@@ -138,8 +136,7 @@ const SuccessMessage = styled.div`
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { state, addToCart } = useCart();
-  const { user } = useUser();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
