@@ -17,14 +17,14 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'  # Make sure this matches your project's Node version
+          node-version: '20.9.0'  # Make sure this matches your project's Node version
 
       - name: Install dependencies
         run: |
           cd my-new-envy
           npm --version
           node --version
-          npm ci --verbose
+          npm install
 
       - name: Build application
         run: |
