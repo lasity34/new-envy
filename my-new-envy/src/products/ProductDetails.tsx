@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useCart } from "../context/CartContext";
-import { useUser } from "../context/UserContext";
 import styled from "styled-components";
 import { MdCheck } from "react-icons/md";
 import { Product, CartItem } from "../types/types";
