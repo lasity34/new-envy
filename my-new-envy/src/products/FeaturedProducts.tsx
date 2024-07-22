@@ -24,14 +24,15 @@ const SectionHeader = styled.h2`
 `;
 
 const FeaturedProducts: React.FC = () => {
-    console.log('API URL:', process.env.REACT_APP_API_URL);
+    const API_URL = process.env.REACT_APP_API_URL || 'http://EnvyBackend.eu-north-1.elasticbeanstalk.com';
+            console.log('API URL:', API_URL);
     const [products, setProducts] = useState<Product[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProducts = async () => {
             try {
-                const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/products`);
+                const response = await axios.get(`${API_URL}/api/products`);
                 setProducts(response.data);
             } catch (error) {
                 setError('Error fetching products');
