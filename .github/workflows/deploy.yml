@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - 'envy-frontend/**'  # Adjust this path if your frontend code is in a different directory
+      - 'my-new-envy/**'  # Adjust this path if your frontend code is in a different directory
 
 jobs:
   deploy:
@@ -20,12 +20,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        cd envy-frontend  # Adjust this if your frontend directory has a different name
+        cd my-new-envy  # Adjust this if your frontend directory has a different name
         npm ci
 
     - name: Build application
       run: |
-        cd envy-frontend  # Adjust this if your frontend directory has a different name
+        cd my-new-envy  # Adjust this if your frontend directory has a different name
         npm run build
       env:
         REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
