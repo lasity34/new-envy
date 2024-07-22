@@ -4,7 +4,7 @@ on:
     branches:
       - main
     paths:
-      - 'my-new-envy/**'  # Adjust this path if your frontend code is in a different directory
+      - 'my-new-envy/**'  # This is correct for your project structure
 
 jobs:
   deploy:
@@ -16,16 +16,16 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '14'  # Adjust if you're using a different version
+        node-version: '14'  # Make sure this matches your project's Node version
 
     - name: Install dependencies
       run: |
-        cd my-new-envy  # Adjust this if your frontend directory has a different name
+        cd my-new-envy  # This is correct
         npm ci
 
     - name: Build application
       run: |
-        cd my-new-envy  # Adjust this if your frontend directory has a different name
+        cd my-new-envy  # This is correct
         npm run build
       env:
         REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
@@ -39,8 +39,8 @@ jobs:
 
     - name: Deploy to S3
       run: |
-        aws s3 sync envy-frontend/build/ s3://${{ secrets.S3_BUCKET }} --delete
-      # Adjust 'envy-frontend/build/' if your build output directory is different
+        aws s3 sync my-new-envy/build/ s3://${{ secrets.S3_BUCKET }} --delete
+      # This line was changed from 'envy-frontend/build/' to 'my-new-envy/build/'
 
     - name: Invalidate CloudFront
       run: |
