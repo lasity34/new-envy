@@ -132,6 +132,7 @@ const SuccessMessage = styled.div`
     opacity: 1;
   }
 `;
+const API_URL = process.env.REACT_APP_API_URL;
 
 const ProductDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -145,7 +146,7 @@ const ProductDetails: React.FC = () => {
     const fetchProduct = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/api/products/${id}`
+          `${API_URL}/api/products/${id}`
         );
         setProduct(response.data);
       } catch (error) {

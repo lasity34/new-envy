@@ -29,10 +29,12 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 app.use(cors({
-  origin: 'https://dpy3304ls63f1.cloudfront.net' || 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'https://dpy3304ls63f1.cloudfront.net'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
