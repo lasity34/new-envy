@@ -10,46 +10,76 @@ import { Product, CartItem } from "../types/types";
 
 const DetailsContainer = styled.div`
   display: flex;
+  flex-direction: column;
   padding: 20px;
   max-width: 1200px;
   width: 90%;
-  margin: 40px auto;
+  margin: 20px auto;
   background: #fff;
   border-radius: 8px;
   font-family: "Playfair", serif;
   color: #5c5c5c;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    margin: 40px auto;
+  }
 `;
 
 const ImageContainer = styled.div`
-  flex: 2;
-  padding: 20px;
+  width: 100%;
+  padding: 10px;
+
+  @media (min-width: 768px) {
+    flex: 2;
+    padding: 20px;
+  }
 `;
 
 const ProductImage = styled.img`
   width: 100%;
-  max-width: 500px;
+  max-width: 100%;
   height: auto;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 8px;
+  max-height: 200px; // Add this line to limit the height on mobile
+
+  @media (min-width: 768px) {
+    max-height: 500px; // Adjust this value for larger screens if needed
+  }
 `;
 
 const Details = styled.div`
-  flex: 1;
-  padding: 20px;
+  width: 100%;
+  padding: 10px;
   display: flex;
   flex-direction: column;
+
+  @media (min-width: 768px) {
+    flex: 1;
+    padding: 20px;
+  }
 `;
 
 const ProductName = styled.h1`
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   margin: 0.2em 0;
+
+  @media (min-width: 768px) {
+    font-size: 2rem;
+  }
 `;
 
 const ProductPrice = styled.p`
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   margin: 4px 0;
+
+  @media (min-width: 768px) {
+    font-size: 1.4rem;
+  }
 `;
+
 
 const ProductDescription = styled.p``;
 
@@ -58,23 +88,43 @@ const StockInfo = styled.p`
   margin-top: 2em;
 `;
 
+const QuantityWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px;
+
+  @media (min-width: 768px) {
+    align-items: flex-start; // Align items to the left on larger screens
+  }
+`;
+
 const QuantityContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 5px;
-  margin-bottom: 30px;
   border: 1px solid #5c5c5c;
   padding: 5px;
-  width: 30%;
+  width: 50%;
+
+  @media (min-width: 768px) {
+    width: 30%;
+    justify-content: flex-start; // Align content to the left on larger screens
+  }
 `;
 
 const QuantityTitle = styled.p`
-  margin-bottom: 0;
+  margin-bottom: 10px;
+  text-align: center; // Center the title on mobile
+
+  @media (min-width: 768px) {
+    text-align: left; // Align left on larger screens
+  }
 `;
 
 const QuantityButton = styled.button`
-  padding: 5px;
+  padding: 5px 10px; // Increased horizontal padding
   background-color: white;
   cursor: pointer;
   border: none;
@@ -82,11 +132,12 @@ const QuantityButton = styled.button`
 `;
 
 const QuantityInput = styled.input`
-  width: 50px;
+  width: 40px; // Reduced width
   text-align: center;
   font-size: 0.9rem;
   border: none;
   outline: none;
+  margin: 0 5px; // Added horizontal margin
   &::-webkit-inner-spin-button,
   &::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -106,7 +157,11 @@ const AddToCartButton = styled.button`
   border-radius: 22px;
   cursor: pointer;
   margin-top: 20px;
-  width: 75%;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    width: 75%;
+  }
 
   &:hover {
     background-color: #5c5c5c;
@@ -205,16 +260,18 @@ const ProductDetails: React.FC = () => {
         <ProductPrice>R {product.price}.00 </ProductPrice>
         <Tax>Tax included.</Tax>
         <ProductDescription>{product.description}</ProductDescription>
-        <QuantityTitle>Qty</QuantityTitle>
-        <QuantityContainer>
-          <QuantityButton onClick={() => handleQuantityChange(-1)}>
-            -
-          </QuantityButton>
-          <QuantityInput type="number" value={quantity} readOnly />
-          <QuantityButton onClick={() => handleQuantityChange(1)}>
-            +
-          </QuantityButton>
-        </QuantityContainer>
+        <QuantityWrapper>
+          <QuantityTitle>Qty</QuantityTitle>
+          <QuantityContainer>
+            <QuantityButton onClick={() => handleQuantityChange(-1)}>
+              -
+            </QuantityButton>
+            <QuantityInput type="number" value={quantity} readOnly />
+            <QuantityButton onClick={() => handleQuantityChange(1)}>
+              +
+            </QuantityButton>
+          </QuantityContainer>
+        </QuantityWrapper>
         <AddToCartButton onClick={handleAddToCart}>Add to Cart</AddToCartButton>
         <SuccessMessage className={addedToCart ? "visible" : ""}>
           <MdCheck style={{ marginRight: "5px" }} />
@@ -224,6 +281,6 @@ const ProductDetails: React.FC = () => {
       </Details>
     </DetailsContainer>
   );
-};
+}
 
 export default ProductDetails;
