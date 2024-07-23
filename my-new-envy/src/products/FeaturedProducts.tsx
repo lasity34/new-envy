@@ -2,25 +2,33 @@ import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import axios from 'axios';
 import ProductCard from './ProductCard';
-import { Product } from '../types/types';  // Ensure Product type is defined and imported
+import { Product } from '../types/types';
 
 const ProductsContainer = styled.div`
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 20px; // Provides space between cards
-    padding: 20px;
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 40px; // Increased from 20px to 40px
+    padding: 40px; // Increased from 20px to 40px
+    max-width: 1400px; // Increased from 1200px to allow for more space
+    margin: 0 auto;
+
+    @media (min-width: 576px) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (min-width: 992px) {
+        grid-template-columns: repeat(4, 1fr);
+    }
 `;
 
 const SectionHeader = styled.h2`
-  width: 100%;
-  text-align: center;
-  font-size: 2.5rem; // Large font size for emphasis
-  color: #433f3e; // A rich blue that might match your theme
-  margin: 40px 0; // Adds vertical space around the header
-  padding-bottom: 10px;
-  
-  font-family: "Playfair", serif;
+    width: 100%;
+    text-align: center;
+    font-size: 2.5rem;
+    color: #433f3e;
+    margin: 40px 0;
+    padding-bottom: 10px;
+    font-family: "Playfair", serif;
 `;
 const API_URL = process.env.REACT_APP_API_URL;
 
