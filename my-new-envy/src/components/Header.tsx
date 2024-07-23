@@ -36,6 +36,15 @@ const LogoContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 0 2vw;
+`;
+
+const CrownImage = styled.img`
+  width: 5vw;
+  max-width: 45px;
+  min-width: 30px;
+  height: auto;
+  margin: 0 1vw;
 `;
 
 const AccountCartContainer = styled.div`
@@ -139,11 +148,9 @@ const NavLink = styled.li`
 `;
 
 const CapImage = styled.img`
-  width: 100px;
-
-  @media (min-width: 768px) {
-    width: 150px;
-  }
+  width: 20vw;
+  max-width: 150px;
+  min-width: 90px;
 `;
 
 const CartIconContainer = styled.div`
@@ -276,9 +283,11 @@ const Header: React.FC = () => {
           </MenuIcon>
         </MenuIconContainer>
         <LogoContainer>
+          <CrownImage src="images/crown_logo.png" alt="Crown" />
           <RouterLink to="/">
             <CapImage src="images/logo.png" alt="Queue" />
           </RouterLink>
+          <CrownImage src="images/crown_logo.png" alt="Crown" />
         </LogoContainer>
         <AccountCartContainer>
           {user && (
@@ -319,7 +328,7 @@ const Header: React.FC = () => {
         </AccountCartContainer>
       </BannerContainer>
       {!hideNav && (
-     <Nav $isOpen={isMenuOpen}>
+        <Nav $isOpen={isMenuOpen}>
           <NavLinks>
             <NavLink><RouterLink to="/" onClick={() => setIsMenuOpen(false)}>Home</RouterLink></NavLink>
             {isHomePage ? (
