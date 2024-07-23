@@ -22,10 +22,9 @@ const SectionHeader = styled.h2`
   
   font-family: "Playfair", serif;
 `;
-const API_URL = process.env.REACT_APP_API_URL || 'https://dpy3304ls63f1.cloudfront.net';
+const API_URL = process.env.REACT_APP_API_URL;
 
 const FeaturedProducts: React.FC = () => {
-            console.log('API URL:', API_URL);
     const [products, setProducts] = useState<Product[]>([]);
     const [error, setError] = useState<string | null>(null);
 
