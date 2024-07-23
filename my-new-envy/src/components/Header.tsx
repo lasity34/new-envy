@@ -37,6 +37,10 @@ const LogoContainer = styled.div`
   justify-content: center;
   align-items: center;
   margin: 0 2vw;
+
+   @media (max-width: 768px) {
+    margin-left: 2em
+  }
 `;
 
 const CrownImage = styled.img`
