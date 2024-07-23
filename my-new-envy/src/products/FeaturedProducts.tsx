@@ -22,7 +22,7 @@ const SectionHeader = styled.h2`
   
   font-family: "Playfair", serif;
 `;
-const API_URL = process.env.REACT_APP_API_URL || 'http://EnvyBackend.eu-north-1.elasticbeanstalk.com';
+const API_URL = process.env.REACT_APP_API_URL
 
 const FeaturedProducts: React.FC = () => {
             console.log('API URL:', API_URL);
