@@ -12,7 +12,7 @@ const DetailsContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
-  max-width: 1200px;
+  max-width: 1000px; // Reduce overall width
   width: 90%;
   margin: 20px auto;
   background: #fff;
@@ -22,6 +22,7 @@ const DetailsContainer = styled.div`
 
   @media (min-width: 768px) {
     flex-direction: row;
+    align-items: flex-start; // Align items to the top
     margin: 40px auto;
   }
 `;
@@ -31,21 +32,22 @@ const ImageContainer = styled.div`
   padding: 10px;
 
   @media (min-width: 768px) {
-    flex: 2;
+    flex: 1;
     padding: 20px;
   }
 `;
 
 const ProductImage = styled.img`
   width: 100%;
-  max-width: 100%;
+  max-width: 400px; // Limit max width
   height: auto;
   object-fit: contain;
   border-radius: 8px;
-  max-height: 200px; // Add this line to limit the height on mobile
+  margin: 0 auto; // Center the image
+  display: block; // Ensure it takes full width
 
   @media (min-width: 768px) {
-    max-height: 500px; // Adjust this value for larger screens if needed
+    max-width: 500px; // Slightly larger on desktop
   }
 `;
 
@@ -62,15 +64,14 @@ const Details = styled.div`
 `;
 
 const ProductName = styled.h1`
-  font-size: 1.5rem;
+  font-size: 1.8rem;
   font-weight: 700;
   margin: 0.2em 0;
 
   @media (min-width: 768px) {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
 `;
-
 const ProductPrice = styled.p`
   font-size: 1.2rem;
   margin: 4px 0;
@@ -81,7 +82,10 @@ const ProductPrice = styled.p`
 `;
 
 
-const ProductDescription = styled.p``;
+const ProductDescription = styled.p`
+  margin-top: 1em;
+  margin-bottom: 1em;
+`;
 
 const StockInfo = styled.p`
   font-size: 1.2rem;
@@ -94,6 +98,7 @@ const QuantityWrapper = styled.div`
   align-items: center;
   width: 100%;
   margin-bottom: 20px;
+   margin-top: 1em;
 
   @media (min-width: 768px) {
     align-items: flex-start; // Align items to the left on larger screens

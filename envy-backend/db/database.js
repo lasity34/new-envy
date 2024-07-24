@@ -5,13 +5,7 @@ const { Pool } = pg;
 let pool;
 
 async function createPool(credentials, sslCertPath) {
-  console.log('Creating database pool with:', {
-    user: process.env.DB_USER || credentials.username,
-    host: process.env.DB_HOST || credentials.host,
-    database: process.env.DB_NAME || credentials.dbname,
-    port: process.env.DB_PORT || credentials.port || 5432,
-    ssl: process.env.USE_SSL === 'true' ? 'enabled' : 'disabled'
-  });
+
 
   const ssl = process.env.USE_SSL === 'true' ? {
     rejectUnauthorized: process.env.REJECT_UNAUTHORIZED !== 'false',
@@ -60,11 +54,9 @@ const executeQuery = async (query, params = []) => {
   }
   const client = await pool.connect();
   try {
-    console.log('Executing query:', query, 'with params:', params);
     const start = Date.now();
     const result = await client.query(query, params);
     const duration = Date.now() - start;
-    console.log(`Query executed successfully in ${duration}ms, returned ${result.rows.length} rows`);
     return result.rows;
   } catch (error) {
     console.error('Error executing query:', query, 'with params:', params, 'Error:', error);
