@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
-import { HashLink as Link } from 'react-router-hash-link';
-import { CiUser } from 'react-icons/ci';
-import { MdOutlineShoppingBag, MdSettings, MdMenu, MdClose } from 'react-icons/md';
-import { useCart } from '../context/CartContext';
-import { useUser } from '../context/UserContext';
-import styled from 'styled-components';
+import React, { useState, useEffect, useRef } from "react";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { HashLink as Link } from "react-router-hash-link";
+import { CiUser } from "react-icons/ci";
+import {
+  MdOutlineShoppingBag,
+  MdSettings,
+  MdMenu,
+  MdClose,
+} from "react-icons/md";
+import { useCart } from "../context/CartContext";
+import { useUser } from "../context/UserContext";
+import styled from "styled-components";
 
 const HeaderContainer = styled.header`
   font-family: "Caveat", cursive;
@@ -34,21 +39,46 @@ const BannerContainer = styled.div`
 
 const LogoContainer = styled.div`
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   margin: 0 2vw;
 
-   @media (max-width: 768px) {
-    margin-left: 2em
+  @media (max-width: 768px) {
+    margin-left: 2em;
   }
 `;
 
+const CrownLogoWrapper = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
 const CrownImage = styled.img`
-  width: 5vw;
-  max-width: 45px;
-  min-width: 30px;
+  width: 35px;
   height: auto;
-  margin: 0 1vw;
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  @media (min-width: 768px) {
+    width: 50px;
+    top: 0px;
+  }
+`;
+
+const CapImage = styled.img`
+  width: 20vw;
+  max-width: 150px;
+  min-width: 100px;
+  margin-top: 15px;
+
+  @media (min-width: 768px) {
+    margin-top: 20px;
+  }
 `;
 
 const AccountCartContainer = styled.div`
@@ -71,9 +101,9 @@ const MenuIconContainer = styled.div`
 
 const Nav = styled.nav<{ $isOpen: boolean }>`
   width: 100%;
-  display: ${props => props.$isOpen ? 'flex' : 'none'};
+  display: ${(props) => (props.$isOpen ? "flex" : "none")};
   flex-direction: column;
-  
+
   @media (min-width: 768px) {
     display: flex;
     flex-direction: row;
@@ -107,8 +137,12 @@ const IconNavLink = styled.li`
 
   a {
     color: black;
-    text-decoration: none; 
+    text-decoration: none;
     font-size: 1.9rem;
+
+    @media (min-width: 768px) {
+      font-size: 2.3rem;
+    }
 
     &:hover {
       color: #433f3e;
@@ -131,7 +165,7 @@ const NavLink = styled.li`
     position: relative;
 
     &::after {
-      content: '';
+      content: "";
       position: absolute;
       bottom: -5px;
       left: 0;
@@ -149,12 +183,6 @@ const NavLink = styled.li`
       transform: translateX(-50%);
     }
   }
-`;
-
-const CapImage = styled.img`
-  width: 20vw;
-  max-width: 150px;
-  min-width: 90px;
 `;
 
 const CartIconContainer = styled.div`
@@ -196,7 +224,7 @@ const DropdownMenu = styled.div<{ $show: boolean }>`
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   z-index: 1000;
-  display: ${(props) => (props.$show ? 'block' : 'none')};
+  display: ${(props) => (props.$show ? "block" : "none")};
   width: 150px;
 `;
 
@@ -210,7 +238,7 @@ const DropdownItem = styled.div`
   position: relative;
 
   &::after {
-    content: '';
+    content: "";
     position: absolute;
     bottom: 0;
     left: 50%;
@@ -248,14 +276,18 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
 
   const itemCount = state.items.reduce((acc, item) => acc + item.quantity, 0);
-  const isHomePage = location.pathname === '/';
-  const hideNav = location.pathname.includes('/products/') || location.pathname === '/cart';
+  const isHomePage = location.pathname === "/";
+  const hideNav =
+    location.pathname.includes("/products/") || location.pathname === "/cart";
 
   const toggleDropdown = () => setShowDropdown(!showDropdown);
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleClickOutside = (event: MouseEvent) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target as Node)
+    ) {
       setShowDropdown(false);
     }
   };
@@ -263,18 +295,18 @@ const Header: React.FC = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      clearCart();  // Clear the cart after successful logout
+      clearCart(); // Clear the cart after successful logout
       setShowDropdown(false);
-      navigate('/');
+      navigate("/");
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error("Error during logout:", error);
     }
   };
 
   useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -287,26 +319,33 @@ const Header: React.FC = () => {
           </MenuIcon>
         </MenuIconContainer>
         <LogoContainer>
-          <CrownImage src="images/crown_logo.png" alt="Crown" />
-          <RouterLink to="/">
-            <CapImage src="images/logo.png" alt="Queue" />
-          </RouterLink>
-          <CrownImage src="images/crown_logo.png" alt="Crown" />
+          <CrownLogoWrapper>
+            <CrownImage src="images/crown_logo.png" alt="Crown" />
+            <RouterLink to="/">
+              <CapImage src="images/logo.png" alt="Queue" />
+            </RouterLink>
+          </CrownLogoWrapper>
         </LogoContainer>
         <AccountCartContainer>
           {user && (
             <DropdownContainer onClick={toggleDropdown} ref={dropdownRef}>
               <DropdownIcon />
               <DropdownMenu $show={showDropdown}>
-                <DropdownItem onClick={() => setShowDropdown(false)} as={RouterLink} to="/account">
+                <DropdownItem
+                  onClick={() => setShowDropdown(false)}
+                  as={RouterLink}
+                  to="/account"
+                >
                   Account Details
                 </DropdownItem>
-                <DropdownItem onClick={() => setShowDropdown(false)} as={RouterLink} to="/orders">
+                <DropdownItem
+                  onClick={() => setShowDropdown(false)}
+                  as={RouterLink}
+                  to="/orders"
+                >
                   Order History
                 </DropdownItem>
-                <DropdownItem onClick={handleLogout}>
-                  Logout
-                </DropdownItem>
+                <DropdownItem onClick={handleLogout}>Logout</DropdownItem>
               </DropdownMenu>
             </DropdownContainer>
           )}
@@ -334,21 +373,56 @@ const Header: React.FC = () => {
       {!hideNav && (
         <Nav $isOpen={isMenuOpen}>
           <NavLinks>
-            <NavLink><RouterLink to="/" onClick={() => setIsMenuOpen(false)}>Home</RouterLink></NavLink>
+            <NavLink>
+              <RouterLink to="/" onClick={() => setIsMenuOpen(false)}>
+                Home
+              </RouterLink>
+            </NavLink>
             {isHomePage ? (
-              <NavLink><Link to="#featured" smooth onClick={() => setIsMenuOpen(false)}>Shop</Link></NavLink>
+              <NavLink>
+                <Link
+                  to="#featured"
+                  smooth
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Shop
+                </Link>
+              </NavLink>
             ) : (
-              <NavLink><RouterLink to="/#featured" onClick={() => setIsMenuOpen(false)}>Shop</RouterLink></NavLink>
+              <NavLink>
+                <RouterLink
+                  to="/#featured"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Shop
+                </RouterLink>
+              </NavLink>
             )}
             {isHomePage ? (
-              <NavLink><Link to="#about" smooth onClick={() => setIsMenuOpen(false)}>About Us</Link></NavLink>
+              <NavLink>
+                <Link to="#about" smooth onClick={() => setIsMenuOpen(false)}>
+                  About Us
+                </Link>
+              </NavLink>
             ) : (
-              <NavLink><RouterLink to="/#about" onClick={() => setIsMenuOpen(false)}>About Us</RouterLink></NavLink>
+              <NavLink>
+                <RouterLink to="/#about" onClick={() => setIsMenuOpen(false)}>
+                  About Us
+                </RouterLink>
+              </NavLink>
             )}
             {isHomePage ? (
-              <NavLink><Link to="#contact" smooth onClick={() => setIsMenuOpen(false)}>Contact</Link></NavLink>
+              <NavLink>
+                <Link to="#contact" smooth onClick={() => setIsMenuOpen(false)}>
+                  Contact
+                </Link>
+              </NavLink>
             ) : (
-              <NavLink><RouterLink to="/#contact" onClick={() => setIsMenuOpen(false)}>Contact</RouterLink></NavLink>
+              <NavLink>
+                <RouterLink to="/#contact" onClick={() => setIsMenuOpen(false)}>
+                  Contact
+                </RouterLink>
+              </NavLink>
             )}
           </NavLinks>
         </Nav>

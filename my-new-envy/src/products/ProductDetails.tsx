@@ -257,7 +257,7 @@ const ProductDetails: React.FC = () => {
       </ImageContainer>
       <Details>
         <ProductName>{product.name}</ProductName>
-        <ProductPrice>R {product.price}.00 </ProductPrice>
+        <ProductPrice>R {product.price}</ProductPrice>
         <Tax>Tax included.</Tax>
         <ProductDescription>{product.description}</ProductDescription>
         <QuantityWrapper>
