@@ -12,7 +12,7 @@ const DetailsContainer = styled.div`
   display: flex;
   flex-direction: column;
   padding: 20px;
-  max-width: 1000px; // Reduce overall width
+  max-width: 1000px;
   width: 90%;
   margin: 20px auto;
   background: #fff;
@@ -22,7 +22,7 @@ const DetailsContainer = styled.div`
 
   @media (min-width: 768px) {
     flex-direction: row;
-    align-items: flex-start; // Align items to the top
+    align-items: flex-start;
     margin: 40px auto;
   }
 `;
@@ -30,6 +30,8 @@ const DetailsContainer = styled.div`
 const ImageContainer = styled.div`
   width: 100%;
   padding: 10px;
+  display: flex;
+  justify-content: center;
 
   @media (min-width: 768px) {
     flex: 1;
@@ -39,15 +41,13 @@ const ImageContainer = styled.div`
 
 const ProductImage = styled.img`
   width: 100%;
-  max-width: 400px; // Limit max width
+  max-width: 300px;
   height: auto;
   object-fit: contain;
   border-radius: 8px;
-  margin: 0 auto; // Center the image
-  display: block; // Ensure it takes full width
 
   @media (min-width: 768px) {
-    max-width: 500px; // Slightly larger on desktop
+    max-width: 500px;
   }
 `;
 
@@ -56,40 +56,57 @@ const Details = styled.div`
   padding: 10px;
   display: flex;
   flex-direction: column;
+  align-items: center;
 
   @media (min-width: 768px) {
     flex: 1;
     padding: 20px;
+    align-items: flex-start;
   }
 `;
+
 
 const ProductName = styled.h1`
   font-size: 1.8rem;
   font-weight: 700;
   margin: 0.2em 0;
+  text-align: center;
 
   @media (min-width: 768px) {
     font-size: 2.2rem;
+    text-align: left;
   }
 `;
+
 const ProductPrice = styled.p`
   font-size: 1.2rem;
   margin: 4px 0;
+  text-align: center;
 
   @media (min-width: 768px) {
     font-size: 1.4rem;
+    text-align: left;
   }
 `;
-
 
 const ProductDescription = styled.p`
   margin-top: 1em;
   margin-bottom: 1em;
+  text-align: center;
+
+  @media (min-width: 768px) {
+    text-align: left;
+  }
 `;
 
 const StockInfo = styled.p`
   font-size: 1.2rem;
   margin-top: 2em;
+  text-align: center;
+
+  @media (min-width: 768px) {
+    text-align: left;
+  }
 `;
 
 const QuantityWrapper = styled.div`
@@ -98,10 +115,10 @@ const QuantityWrapper = styled.div`
   align-items: center;
   width: 100%;
   margin-bottom: 20px;
-   margin-top: 1em;
+  margin-top: 1em;
 
   @media (min-width: 768px) {
-    align-items: flex-start; // Align items to the left on larger screens
+    align-items: flex-start;
   }
 `;
 
@@ -111,25 +128,20 @@ const QuantityContainer = styled.div`
   justify-content: center;
   border: 1px solid #5c5c5c;
   padding: 5px;
-  width: 50%;
-
-  @media (min-width: 768px) {
-    width: 30%;
-    justify-content: flex-start; // Align content to the left on larger screens
-  }
+  width: 120px;
 `;
 
 const QuantityTitle = styled.p`
   margin-bottom: 10px;
-  text-align: center; // Center the title on mobile
+  text-align: center;
 
   @media (min-width: 768px) {
-    text-align: left; // Align left on larger screens
+    text-align: left;
   }
 `;
 
 const QuantityButton = styled.button`
-  padding: 5px 10px; // Increased horizontal padding
+  padding: 5px 10px;
   background-color: white;
   cursor: pointer;
   border: none;
@@ -137,12 +149,12 @@ const QuantityButton = styled.button`
 `;
 
 const QuantityInput = styled.input`
-  width: 40px; // Reduced width
+  width: 40px;
   text-align: center;
   font-size: 0.9rem;
   border: none;
   outline: none;
-  margin: 0 5px; // Added horizontal margin
+  margin: 0 5px;
   &::-webkit-inner-spin-button,
   &::-webkit-outer-spin-button {
     -webkit-appearance: none;
@@ -162,11 +174,8 @@ const AddToCartButton = styled.button`
   border-radius: 22px;
   cursor: pointer;
   margin-top: 20px;
-  width: 100%;
-
-  @media (min-width: 768px) {
-    width: 75%;
-  }
+  width: 80%;
+  max-width: 300px;
 
   &:hover {
     background-color: #5c5c5c;
@@ -177,11 +186,17 @@ const AddToCartButton = styled.button`
 const Tax = styled.p`
   padding-bottom: 1.5em;
   border-bottom: 1px solid #d1c9c7;
+  text-align: center;
+
+  @media (min-width: 768px) {
+    text-align: left;
+  }
 `;
 
 const SuccessMessage = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   color: green;
   font-size: 1rem;
   margin-top: 10px;
@@ -192,6 +207,7 @@ const SuccessMessage = styled.div`
     opacity: 1;
   }
 `;
+
 const API_URL = process.env.REACT_APP_API_URL;
 
 const ProductDetails: React.FC = () => {
