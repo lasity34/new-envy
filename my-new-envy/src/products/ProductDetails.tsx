@@ -40,7 +40,8 @@ const ImageContainer = styled.div`
 `;
 
 const ProductImage = styled.img`
-  width: 100%;
+  width: 60%;
+  min-width: 200px;
   max-width: 300px;
   height: auto;
   object-fit: contain;
@@ -302,6 +303,7 @@ const ProductDetails: React.FC = () => {
       </Details>
     </DetailsContainer>
   );
+
 }
 
 export default ProductDetails;
