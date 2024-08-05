@@ -217,11 +217,18 @@ const ShoppingCart: React.FC = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [hasDetails, setHasDetails] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      mergeAnonymousCartWithUserCart();
-    }
+    const initializeCart = async () => {
+      if (user) {
+        await mergeAnonymousCartWithUserCart();
+        await checkUserDetails();
+      }
+      setIsLoading(false);
+    };
+
+    initializeCart();
   }, [user, mergeAnonymousCartWithUserCart]);
 
 
