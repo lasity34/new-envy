@@ -102,12 +102,7 @@ async function initializeApp() {
 }
 
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    dbConnection: !!pool, // Assuming you have a 'pool' variable for your database connection
-    secrets: !!process.env.JWT_SECRET,
-    time: new Date().toISOString()
-  });
+  res.status(200).json({ status: 'OK', time: new Date().toISOString() });
 });
 
 app.use((err, req, res, next) => {

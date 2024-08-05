@@ -34,20 +34,20 @@ function createPool(credentials, sslCertPath) {
 
 export async function connectDatabase(credentials, sslCertPath) {
   try {
-    pool = await createPool(credentials, sslCertPath);
+    console.log('Attempting to create database pool...');
+    const pool = createPool(credentials, sslCertPath);
     
-    pool.on('error', (err, client) => {
-      console.error('Unexpected error on idle client', err);
-    });
-
-    // Test the connection
+    console.log('Attempting to connect to the database...');
     const client = await pool.connect();
     try {
+      console.log('Connected. Executing test query...');
       await client.query('SELECT NOW()');
       console.log('Database connection successful');
     } finally {
       client.release();
     }
+
+    return pool;
   } catch (error) {
     console.error('Failed to create database pool:', error);
     throw error;
