@@ -30,10 +30,13 @@ const PORT = process.env.PORT || 8080;
 
 app.use(cors({
   origin: ['http://localhost:3000', 'https://dpy3304ls63f1.cloudfront.net'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
+
+app.options('*', cors()); // Enable preflight requests for all routes
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -97,22 +100,7 @@ async function initializeApp() {
   }
 }
 
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
-});
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('Something broke!');
-});
-
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-});
 
 app.get('/', (req, res) => {
   res.send('Hello from Envy backend!');
@@ -134,6 +122,7 @@ app.post('/api/products/upload', authenticateAdmin, upload.single('image'), asyn
   }
 });
 
+app.use(cors(corsOptions));
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);

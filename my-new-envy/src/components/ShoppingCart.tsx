@@ -264,6 +264,10 @@ const ShoppingCart: React.FC = () => {
     0
   );
 
+  if (isLoading) {
+    return <CartContainer>Loading your cart...</CartContainer>;
+  }
+
   if (state.items.length === 0) {
     return <CartContainer>Your cart is empty!</CartContainer>;
   }
@@ -279,10 +283,9 @@ const ShoppingCart: React.FC = () => {
   };
 
 
-  return (
+   return (
     <CartContainer>
       <CartTitle>Cart</CartTitle>
-  
       {state.items.map((item) => (
         <CartItemContainer key={item.id}>
           <ItemDetails>
