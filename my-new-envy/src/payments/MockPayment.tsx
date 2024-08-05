@@ -148,6 +148,9 @@ const MockPayment: React.FC = () => {
     }
   
     try {
+      // Always save user details to the backend
+      await axiosInstance.post('/api/user/details', userData);
+  
       const response = await axiosInstance.post('/api/checkout/mock-checkout', {
         userData: {
           ...userData,
@@ -169,7 +172,7 @@ const MockPayment: React.FC = () => {
         setError('Checkout failed. Please try again.');
         console.error('Checkout failed');
       }
-    }catch (error) {
+    } catch (error) {
       if (error instanceof AxiosError) {
         if (error.response?.status === 401) {
           setError('Please log in to complete your order.');
@@ -182,7 +185,7 @@ const MockPayment: React.FC = () => {
       console.error('Error processing the order:', error);
     }
   };
-
+  
   useEffect(() => {
     const savedUserData = localStorage.getItem('userData');
     if (savedUserData) {

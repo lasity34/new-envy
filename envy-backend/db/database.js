@@ -132,4 +132,43 @@ export async function getUserById(id) {
   return (await executeQuery(query, [id]))[0];
 }
 
+export async function updateUserDetails(userId, { firstName, lastName, address, city, province, postalCode, phone }) {
+  const query = `
+    UPDATE users 
+    SET first_name = $1, last_name = $2, address = $3, city = $4, province = $5, postal_code = $6, phone = $7 
+    WHERE id = $8 
+    RETURNING id, username, email, first_name, last_name, address, city, province, postal_code, phone
+  `;
+  return (await executeQuery(query, [firstName, lastName, address, city, province, postalCode, phone, userId]))[0];
+}
+
+export async function getUserDetails(userId) {
+  const query = `
+    SELECT id, username, email, first_name, last_name, address, city, province, postal_code, phone 
+    FROM users 
+    WHERE id = $1
+  `;
+  return (await executeQuery(query, [userId]))[0];
+}
+
+export async function hasUserDetails(userId) {
+  const query = `
+    SELECT 
+      CASE WHEN first_name IS NOT NULL AND 
+                last_name IS NOT NULL AND 
+                address IS NOT NULL AND 
+                city IS NOT NULL AND 
+                province IS NOT NULL AND 
+                postal_code IS NOT NULL AND 
+                phone IS NOT NULL 
+      THEN true 
+      ELSE false 
+      END AS has_details 
+    FROM users 
+    WHERE id = $1
+  `;
+  const result = await executeQuery(query, [userId]);
+  return result[0].has_details;
+}
+
 export { pool };

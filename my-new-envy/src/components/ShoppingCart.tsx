@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { useUser } from "../context/UserContext";
+import axiosInstance from '../axiosInstance';
 
 const CartContainer = styled.div`
   display: flex;
@@ -215,12 +216,23 @@ const ShoppingCart: React.FC = () => {
   const { state, dispatch, removeFromCart, adjustQuantity, mergeAnonymousCartWithUserCart } = useCart();
   const { user } = useUser();
   const navigate = useNavigate();
+  const [hasDetails, setHasDetails] = useState(false);
 
   useEffect(() => {
     if (user) {
       mergeAnonymousCartWithUserCart();
     }
   }, [user, mergeAnonymousCartWithUserCart]);
+
+
+  const checkUserDetails = async () => {
+    try {
+      const response = await axiosInstance.get('/api/user/has-details');
+      setHasDetails(response.data.hasDetails);
+    } catch (error) {
+      console.error('Error checking user details:', error);
+    }
+  };
 
   const handleRemove = async (id: string) => {
     if (user) {
@@ -250,8 +262,15 @@ const ShoppingCart: React.FC = () => {
   }
 
   const handleCheckout = () => {
-    navigate("/checkout");
+    if (!user) {
+      navigate("/login");
+    } else if (hasDetails) {
+      navigate("/checkout-confirmation");
+    } else {
+      navigate("/checkout");
+    }
   };
+
 
   return (
     <CartContainer>
@@ -287,7 +306,9 @@ const ShoppingCart: React.FC = () => {
         <TotalPriceText>TOTAL: ({state.items.length} {state.items.length === 1 ? 'Item' : 'Items'})</TotalPriceText>
         <TotalPrice>R {totalPrice.toFixed(2)}</TotalPrice>
       </Total>
-      <CheckoutButton onClick={handleCheckout}>Proceed to Checkout</CheckoutButton>
+      <CheckoutButton onClick={handleCheckout}>
+        {user ? "Proceed to Checkout" : "Login to Checkout"}
+      </CheckoutButton>
     </CartContainer>
   );
 };

@@ -21,6 +21,7 @@ import OrderConfirmation from './components/OrderConfirmation';
 import OrderHistory from './components/OrderHistory';
 import SyncCartComponent from './components/SyncCartComponent';
 import AdminOrders from './admin/AdminOrders';
+import CheckoutConfirmation from './components/CheckoutConfirmation';
 
 const AppContent = () => {
   return (
@@ -50,6 +51,7 @@ const AppContent = () => {
         <Route path="/products/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<ShoppingCart />} />
         <Route path="/checkout" element={<MockPayment />} />
+        <Route path="/checkout-confirmation" element={<CheckoutConfirmation />} />
         <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
         <Route path="/order-history" element={<PrivateRoute path="/order-history" element={<OrderHistory />} />} />
         <Route path="/signup" element={<Signup />} />
