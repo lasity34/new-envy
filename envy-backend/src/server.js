@@ -28,15 +28,16 @@ for (const varName of requiredEnvVariables) {
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-app.use(cors({
-  origin: ['http://localhost:3000', 'https://dpy3304ls63f1.cloudfront.net'],
+const corsOptions = {
+  origin: ['http://localhost:3000', 'https://dpy3304ls63f1.cloudfront.net', 'http://envybackend-env.eba-xpkjuag7.eu-north-1.elasticbeanstalk.com/'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   credentials: true,
   optionsSuccessStatus: 200
-}));
+};
 
-app.options('*', cors()); // Enable preflight requests for all routes
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions))
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -46,7 +47,7 @@ const upload = multer({ storage });
 
 async function initializeApp() {
   try {
-    const secrets = await getSecret();
+    const secrets = await getSecret(process.env.Envy_secrets);
     
     console.log('Retrieved secrets:', Object.keys(secrets));
 
@@ -81,7 +82,7 @@ async function initializeApp() {
       try {
         sslCertPath = await downloadFileFromS3(process.env.S3_BUCKET_NAME, process.env.KEY, '/tmp/global-bundle.pem');
       } catch (error) {
-        console.warn('Warning: Error downloading SSL certificate. SSL may not be enabled.', error);
+        console.warn('Warning: Error downloading SSL certificate. SSL will be enabled without a custom CA.', error);
       }
     }
 
@@ -89,7 +90,7 @@ async function initializeApp() {
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       host: process.env.DB_HOST,
-      port: dbPort,
+      port: parseInt(process.env.DB_PORT, 10),
       dbname: process.env.DB_NAME
     }, sslCertPath);
 
@@ -100,10 +101,30 @@ async function initializeApp() {
   }
 }
 
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    dbConnection: !!pool, // Assuming you have a 'pool' variable for your database connection
+    secrets: !!process.env.JWT_SECRET,
+    time: new Date().toISOString()
+  });
+});
 
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 app.get('/', (req, res) => {
-  res.send('Hello from Envy backend!');
+  res.send('Bjorn is Awesome');
 });
 
 app.post('/api/products/upload', authenticateAdmin, upload.single('image'), async (req, res) => {
@@ -122,7 +143,7 @@ app.post('/api/products/upload', authenticateAdmin, upload.single('image'), asyn
   }
 });
 
-app.use(cors(corsOptions));
+
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);

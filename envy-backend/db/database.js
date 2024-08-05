@@ -4,24 +4,31 @@ const { Pool } = pg;
 
 let pool;
 
-async function createPool(credentials, sslCertPath) {
-
-
-  const ssl = process.env.USE_SSL === 'true' ? {
-    rejectUnauthorized: process.env.REJECT_UNAUTHORIZED !== 'false',
-    ca: readFileSync(sslCertPath).toString()
-  } : false;
+function createPool(credentials, sslCertPath) {
+  let ssl = false;
+  if (process.env.USE_SSL === 'true') {
+    ssl = {
+      rejectUnauthorized: process.env.REJECT_UNAUTHORIZED !== 'false',
+    };
+    if (sslCertPath) {
+      try {
+        ssl.ca = readFileSync(sslCertPath).toString();
+      } catch (error) {
+        console.warn('Warning: Error reading SSL certificate. SSL will be enabled without a custom CA.', error);
+      }
+    }
+  }
 
   return new Pool({
     user: process.env.DB_USER || credentials.username,
     host: process.env.DB_HOST || credentials.host,
     database: process.env.DB_NAME || credentials.dbname,
     password: process.env.DB_PASSWORD || credentials.password,
-    port: process.env.DB_PORT || credentials.port || 5432,
+    port: parseInt(process.env.DB_PORT, 10) || credentials.port || 5432,
     ssl: ssl,
-    connectionTimeoutMillis: 60000, // Increase timeout to 30 seconds
-    idleTimeoutMillis: 60000, // Increase idle timeout to 60 seconds
-    max: 5, // Reduce max connections to 5
+    connectionTimeoutMillis: 60000, // 60 seconds timeout
+    idleTimeoutMillis: 60000, // 60 seconds idle timeout
+    max: 5, // Maximum 5 connections
   });
 }
 
