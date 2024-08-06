@@ -35,9 +35,9 @@ function createPool(credentials, sslCertPath) {
 export async function connectDatabase(credentials, sslCertPath) {
   try {
     console.log('Attempting to create database pool...');
-    const pool = createPool(credentials, sslCertPath);
+    pool = createPool(credentials, sslCertPath);
     
-    console.log('Attempting to connect to the database...');
+    console.log('Pool created. Attempting to connect to the database...');
     const client = await pool.connect();
     try {
       console.log('Connected. Executing test query...');

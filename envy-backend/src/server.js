@@ -3,7 +3,7 @@ import cors from 'cors';
 import { config as dotenvConfig } from 'dotenv';
 import bodyParser from 'body-parser';
 import multer from 'multer';
-import { connectDatabase } from '../db/database.js';
+import { connectDatabase, pool } from '../db/database.js';
 import { getSecret, downloadFileFromS3, uploadFileToS3 } from '../services/aws-services.js';
 import authRoutes from '../routes/authRoutes.js';
 import productRoutes from '../routes/productRoutes.js';
@@ -29,7 +29,12 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 const corsOptions = {
-  origin: ['http://localhost:3000', 'https://dpy3304ls63f1.cloudfront.net', 'http://envybackend-env.eba-xpkjuag7.eu-north-1.elasticbeanstalk.com/'],
+  origin: [
+    'http://localhost:3000', 
+    'https://dpy3304ls63f1.cloudfront.net',
+    'http://envy-frontend.s3.eu-north-1.amazonaws.com',
+    'https://envy-frontend.s3.eu-north-1.amazonaws.com'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
   credentials: true,
@@ -37,7 +42,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options('*', cors(corsOptions))
+app.options('*', cors(corsOptions));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -47,31 +52,38 @@ const upload = multer({ storage });
 
 async function initializeApp() {
   try {
-    const secrets = await getSecret(process.env.Envy_secrets);
-    
-    console.log('Retrieved secrets:', Object.keys(secrets));
+    console.log('Environment variables:', {
+      SECRETS_ARN: process.env.SECRETS_ARN,
+      DB_HOST: process.env.DB_HOST,
+      DB_PORT: process.env.DB_PORT,
+      DB_NAME: process.env.DB_NAME,
+      DB_USER: process.env.DB_USER,
+      USE_SSL: process.env.USE_SSL,
+      S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+      KEY: process.env.KEY
+    });
 
-    // Set sensitive environment variables from secrets
+    const secretName = process.env.SECRETS_ARN;
+    if (!secretName) {
+      throw new Error('SECRETS_ARN environment variable is not set');
+    }
+
+    console.log('Attempting to retrieve secrets from:', secretName);
+    const secrets = await getSecret(secretName);
+    console.log('Retrieved secrets keys:', Object.keys(secrets));
+
     process.env.DB_PASSWORD = secrets.DB_PASSWORD;
     process.env.JWT_SECRET = secrets.JWT_SECRET;
     process.env.SENDGRID_API_KEY = secrets.SENDGRID_API_KEY;
 
-    // Check for SendGrid API key
     if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith("SG.")) {
       console.log("SendGrid API key set successfully");
     } else {
       console.warn("Warning: Invalid or missing SendGrid API key in secrets. Email functionality may not work.");
     }
 
-    // Log database connection details (excluding password)
-    console.log('Database connection details:', {
-      host: process.env.DB_HOST,
-      port: process.env.DB_PORT,
-      database: process.env.DB_NAME,
-      user: process.env.DB_USER
-    });
 
-    // Ensure DB_PORT is a number
+
     const dbPort = parseInt(process.env.DB_PORT, 10);
     if (isNaN(dbPort)) {
       throw new Error(`Invalid DB_PORT: ${process.env.DB_PORT}`);
@@ -90,19 +102,23 @@ async function initializeApp() {
       username: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT, 10),
+      port: dbPort,
       dbname: process.env.DB_NAME
     }, sslCertPath);
 
     console.log('Application initialized successfully');
   } catch (error) {
     console.error('Failed to initialize the application:', error);
-    process.exit(1);
+    throw error;
   }
 }
 
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'OK', time: new Date().toISOString() });
+  res.status(200).json({
+    status: 'OK',
+    time: new Date().toISOString(),
+    dbConnected: !!pool
+  });
 });
 
 app.use((err, req, res, next) => {
@@ -138,7 +154,6 @@ app.post('/api/products/upload', authenticateAdmin, upload.single('image'), asyn
   }
 });
 
-
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
@@ -153,6 +168,10 @@ app.get('/api/admin/protected', authenticateAdmin, (req, res) => {
 });
 
 initializeApp().then(() => {
+  if (!pool) {
+    console.error('Database pool is not initialized. Exiting...');
+    process.exit(1);
+  }
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });

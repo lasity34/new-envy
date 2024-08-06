@@ -51,18 +51,18 @@ async function getCredentials() {
   }
 }
 
-async function getSecret() {
+async function getSecret(secretName) {
+  console.log('getSecret called with:', secretName);
   const credentials = await getCredentials();
   const client = new SecretsManagerClient({ region: AWS_REGION, credentials });
   try {
-    const data = await client.send(new GetSecretValueCommand({ SecretId: process.env.SECRETS_ARN }));
+    const data = await client.send(new GetSecretValueCommand({ SecretId: secretName }));
     return JSON.parse(data.SecretString);
   } catch (error) {
     console.error('Error getting secret:', error);
     throw error;
   }
 }
-
 async function downloadFileFromS3(bucket, key, downloadPath) {
   const credentials = await getCredentials();
   const s3Client = new S3Client({ region: AWS_REGION, credentials });
