@@ -50,11 +50,10 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  console.log('Login request body:', req.body);
   const { identifier, password } = req.body;
 
   try {
-    console.log('Login attempt with identifier:', identifier);
+   
 
     if (!identifier || !password) {
       console.log('Missing identifier or password');
@@ -197,12 +196,12 @@ export const getUserDetailsController = async (req, res) => {
 export const updateUserDetailsController = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { firstName, lastName, address, city, province, postalCode, phone } = req.body;
+    console.log('Updating user details for user ID:', userId);
+    console.log('Received user details:', req.body);
+
+    const updatedUser = await updateUserDetails(userId, req.body);
     
-    const updatedUser = await updateUserDetails(userId, { firstName, lastName, address, city, province, postalCode, phone });
-    if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    console.log('Updated user:', updatedUser);
     
     res.status(200).json({ message: 'User details updated successfully', user: updatedUser });
   } catch (error) {
@@ -211,10 +210,16 @@ export const updateUserDetailsController = async (req, res) => {
   }
 };
 
+
 export const hasUserDetailsController = async (req, res) => {
   try {
     const userId = req.user.userId;
+    console.log('Checking user details for user ID:', userId);
+
     const hasDetails = await hasUserDetails(userId);
+    
+    console.log('Has user details result:', hasDetails);
+    
     res.status(200).json({ hasDetails });
   } catch (error) {
     console.error('Error checking user details:', error);

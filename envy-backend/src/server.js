@@ -52,25 +52,16 @@ const upload = multer({ storage });
 
 async function initializeApp() {
   try {
-    console.log('Environment variables:', {
-      SECRETS_ARN: process.env.SECRETS_ARN,
-      DB_HOST: process.env.DB_HOST,
-      DB_PORT: process.env.DB_PORT,
-      DB_NAME: process.env.DB_NAME,
-      DB_USER: process.env.DB_USER,
-      USE_SSL: process.env.USE_SSL,
-      S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
-      KEY: process.env.KEY
-    });
+  
 
     const secretName = process.env.SECRETS_ARN;
     if (!secretName) {
       throw new Error('SECRETS_ARN environment variable is not set');
     }
 
-    console.log('Attempting to retrieve secrets from:', secretName);
+ 
     const secrets = await getSecret(secretName);
-    console.log('Retrieved secrets keys:', Object.keys(secrets));
+   
 
     process.env.DB_PASSWORD = secrets.DB_PASSWORD;
     process.env.JWT_SECRET = secrets.JWT_SECRET;
@@ -106,7 +97,7 @@ async function initializeApp() {
       dbname: process.env.DB_NAME
     }, sslCertPath);
 
-    console.log('Application initialized successfully');
+   
   } catch (error) {
     console.error('Failed to initialize the application:', error);
     throw error;
@@ -135,7 +126,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Bjorn is Awesome');
+  res.send('Bjorn is Awesome and carin is crazy');
 });
 
 app.post('/api/products/upload', authenticateAdmin, upload.single('image'), async (req, res) => {

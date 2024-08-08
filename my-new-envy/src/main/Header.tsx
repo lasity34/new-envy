@@ -334,7 +334,7 @@ const Header: React.FC = () => {
                 <DropdownItem
                   onClick={() => setShowDropdown(false)}
                   as={RouterLink}
-                  to="/account"
+                  to="/account-details"
                 >
                   Account Details
                 </DropdownItem>

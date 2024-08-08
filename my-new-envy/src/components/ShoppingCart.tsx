@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { useUser } from "../context/UserContext";
@@ -216,8 +216,20 @@ const ShoppingCart: React.FC = () => {
   const { state, dispatch, removeFromCart, adjustQuantity, mergeAnonymousCartWithUserCart } = useCart();
   const { user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
   const [hasDetails, setHasDetails] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  const checkUserDetails = async () => {
+    try {
+      const response = await axiosInstance.get('/api/auth/has-details');
+      console.log('Has details response:', response.data);
+      setHasDetails(response.data.hasDetails);
+    } catch (error) {
+      console.error('Error checking user details:', error);
+      setHasDetails(false);
+    }
+  };
 
   useEffect(() => {
     const initializeCart = async () => {
@@ -231,15 +243,23 @@ const ShoppingCart: React.FC = () => {
     initializeCart();
   }, [user, mergeAnonymousCartWithUserCart]);
 
+  useEffect(() => {
+    if (user && location.state?.fromCheckout) {
+      checkUserDetails();
+    }
+  }, [user, location]);
 
-  const checkUserDetails = async () => {
-    try {
-      const response = await axiosInstance.get('/api/user/has-details');
-      setHasDetails(response.data.hasDetails);
-    } catch (error) {
-      console.error('Error checking user details:', error);
+  const handleCheckout = () => {
+    console.log('Handling checkout. Has details:', hasDetails);
+    if (!user) {
+      navigate("/login");
+    } else if (hasDetails) {
+      navigate("/checkout-confirmation");
+    } else {
+      navigate("/checkout");
     }
   };
+
 
   const handleRemove = async (id: string) => {
     if (user) {
@@ -272,15 +292,7 @@ const ShoppingCart: React.FC = () => {
     return <CartContainer>Your cart is empty!</CartContainer>;
   }
 
-  const handleCheckout = () => {
-    if (!user) {
-      navigate("/login");
-    } else if (hasDetails) {
-      navigate("/checkout-confirmation");
-    } else {
-      navigate("/checkout");
-    }
-  };
+  
 
 
    return (
