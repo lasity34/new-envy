@@ -104,7 +104,6 @@ const Login: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log('Login attempt with:', { identifier, password });
       const user = await login(identifier, password);
       if (user.role === 'admin') {
         navigate('/admin/dashboard');

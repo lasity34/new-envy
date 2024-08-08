@@ -6,7 +6,6 @@ import { config as dotenvConfig } from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 
-// Load environment variables from .env file
 dotenvConfig();
 
 const AWS_REGION = process.env.AWS_REGION;
@@ -21,51 +20,53 @@ if (!AWS_REGION || !AWS_ROLE_ARN || !AWS_ROLE_SESSION_NAME || !S3_BUCKET_NAME) {
 
 let cachedCredentials = null;
 
-async function assumeRole() {
-  if (cachedCredentials) {
-    return cachedCredentials;
-  }
+async function getCredentials() {
+  if (process.env.AWS_EXECUTION_ENV && process.env.AWS_EXECUTION_ENV.startsWith('AWS_ECS_EC2')) {
+    // Running in EC2, use instance profile
+    return {};  // Empty object will make SDK use instance profile
+  } else {
+    // Local development or other environment, assume role
+    if (cachedCredentials) {
+      return cachedCredentials;
+    }
 
-  const stsClient = new STSClient({ region: AWS_REGION });
-  const params = {
-    RoleArn: AWS_ROLE_ARN,
-    RoleSessionName: AWS_ROLE_SESSION_NAME
-  };
-
-  try {
-    const data = await stsClient.send(new AssumeRoleCommand(params));
-    cachedCredentials = {
-      accessKeyId: data.Credentials.AccessKeyId,
-      secretAccessKey: data.Credentials.SecretAccessKey,
-      sessionToken: data.Credentials.SessionToken
+    const stsClient = new STSClient({ region: AWS_REGION });
+    const params = {
+      RoleArn: AWS_ROLE_ARN,
+      RoleSessionName: AWS_ROLE_SESSION_NAME
     };
-    return cachedCredentials;
-  } catch (err) {
-    console.error('Error assuming role:', err);
-    throw err;
+
+    try {
+      const data = await stsClient.send(new AssumeRoleCommand(params));
+      cachedCredentials = {
+        accessKeyId: data.Credentials.AccessKeyId,
+        secretAccessKey: data.Credentials.SecretAccessKey,
+        sessionToken: data.Credentials.SessionToken
+      };
+      return cachedCredentials;
+    } catch (err) {
+      console.error('Error assuming role:', err);
+      throw err;
+    }
   }
 }
 
-async function getSecret(secretId) {
-  const credentials = await assumeRole();
+async function getSecret(secretName) {
+  console.log('getSecret called with:', secretName);
+  const credentials = await getCredentials();
   const client = new SecretsManagerClient({ region: AWS_REGION, credentials });
   try {
-    const data = await client.send(new GetSecretValueCommand({ SecretId: secretId }));
-    const secret = JSON.parse(data.SecretString);
-    console.log('AWS Database Password:', secret.password); // Log the password here
-    return secret;
+    const data = await client.send(new GetSecretValueCommand({ SecretId: secretName }));
+    return JSON.parse(data.SecretString);
   } catch (error) {
     console.error('Error getting secret:', error);
     throw error;
   }
 }
-
-
 async function downloadFileFromS3(bucket, key, downloadPath) {
-  const credentials = await assumeRole();
+  const credentials = await getCredentials();
   const s3Client = new S3Client({ region: AWS_REGION, credentials });
 
-  // Ensure the download directory exists
   const downloadDir = path.dirname(downloadPath);
   await fsPromises.mkdir(downloadDir, { recursive: true });
 
@@ -86,7 +87,7 @@ async function downloadFileFromS3(bucket, key, downloadPath) {
 }
 
 async function uploadFileToS3(file) {
-  const credentials = await assumeRole();
+  const credentials = await getCredentials();
   const s3Client = new S3Client({ region: AWS_REGION, credentials });
   const fileName = `${uuidv4()}-${file.originalname}`;
   const uploadParams = {
@@ -108,7 +109,7 @@ async function uploadFileToS3(file) {
 }
 
 export {
-  assumeRole,
+  getCredentials,
   getSecret,
   downloadFileFromS3,
   uploadFileToS3

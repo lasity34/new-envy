@@ -115,3 +115,19 @@ export const uploadImage = async (req, res) => {
     res.status(500).send({ error: 'Failed to upload image' });
   }
 };
+
+export const updateProductStock = async (req, res) => {
+  const { id } = req.params;
+  const { stock } = req.body;
+
+  try {
+    const updatedProduct = await updateProduct(id, { stock });
+    if (!updatedProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    res.json(updatedProduct);
+  } catch (error) {
+    console.error(`Error updating product stock with ID: ${id}`, error);
+    res.status(500).json({ error: error.message });
+  }
+};

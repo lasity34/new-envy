@@ -115,13 +115,13 @@ export const CartProvider: React.FC<{ children: ReactNode; user: User | null }> 
       const anonymousCartItems: CartItem[] = JSON.parse(localStorage.getItem('cartItems') || '[]');
       if (anonymousCartItems.length > 0) {
         try {
-          console.log('CartContext - Merging anonymous cart with user cart');
+         
           const response = await axios.post<SyncedCartItem[]>(
             `${process.env.REACT_APP_API_URL}/api/cart/merge`,
             { items: anonymousCartItems },
             { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
           );
-          console.log('CartContext - Merge response:', response.data);
+        
   
           const mergedItems: CartItem[] = response.data.map(item => ({
             id: item.product_id.toString(),
