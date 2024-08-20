@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import styled from 'styled-components';
 
@@ -45,12 +45,40 @@ const TotalPrice = styled.div`
   font-size: 1.2em;
 `;
 
+const Button = styled.button`
+  background-color: #333;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  display: inline-block;
+`;
+
+const TrackButton = styled(Button)`
+  background-color: #4CAF50;
+`;
+
+const HomeButton = styled(Button)`
+  background-color: #007bff;
+  margin-right: 10px;
+`;
+
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+`;
+
 interface OrderItem {
   id: number;
   product_id: number;
   product_name: string;
   quantity: number;
-  price: number;
+  price: number | string;
 }
 
 interface Order {
@@ -59,12 +87,16 @@ interface Order {
   total_amount: number | string;
   created_at: string;
   items: OrderItem[];
+  tracking_number: string;
+  estimated_delivery_date: string;
+  shipping_cost: number | string;
 }
 
 const OrderConfirmation: React.FC = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -93,16 +125,24 @@ const OrderConfirmation: React.FC = () => {
     return <div>Loading order details...</div>;
   }
 
-  const formatPrice = (price: number): string => {
-    return price.toFixed(2);
+  const formatPrice = (price: number | string): string => {
+    const numPrice = typeof price === 'string' ? parseFloat(price) : price;
+    return isNaN(numPrice) ? '0.00' : numPrice.toFixed(2);
   };
 
   const calculateItemTotal = (item: OrderItem): number => {
-    return item.quantity * item.price;
+    const itemPrice = typeof item.price === 'string' ? parseFloat(item.price) : item.price;
+    return item.quantity * (isNaN(itemPrice) ? 0 : itemPrice);
   };
 
-  const calculateOrderTotal = (): number => {
+  const calculateSubtotal = (): number => {
     return order.items.reduce((total, item) => total + calculateItemTotal(item), 0);
+  };
+
+  const calculateTotalWithShipping = (): number => {
+    const subtotal = calculateSubtotal();
+    const shippingCost = typeof order.shipping_cost === 'string' ? parseFloat(order.shipping_cost) : order.shipping_cost;
+    return subtotal + (isNaN(shippingCost) ? 0 : shippingCost);
   };
 
   return (
@@ -122,8 +162,26 @@ const OrderConfirmation: React.FC = () => {
             </ItemListItem>
           ))}
         </ItemList>
-        <TotalPrice>Total: R {formatPrice(calculateOrderTotal())}</TotalPrice>
+        <TotalPrice>Subtotal: R {formatPrice(calculateSubtotal())}</TotalPrice>
+        <TotalPrice>Shipping: R {formatPrice(order.shipping_cost)}</TotalPrice>
+        <TotalPrice>Total: R {formatPrice(calculateTotalWithShipping())}</TotalPrice>
+        {order.tracking_number && (
+          <div>
+            <p>Tracking Number: {order.tracking_number}</p>
+            <p>Estimated Delivery: {new Date(order.estimated_delivery_date).toLocaleDateString()}</p>
+          </div>
+        )}
       </OrderDetails>
+      <ButtonContainer>
+        <HomeButton onClick={() => navigate('/')}>
+          Back to Home
+        </HomeButton>
+        {order.tracking_number && (
+          <TrackButton as={Link} to={`/track-order/${order.tracking_number}`}>
+            Track Shipment
+          </TrackButton>
+        )}
+      </ButtonContainer>
     </ConfirmationContainer>
   );
 };

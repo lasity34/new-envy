@@ -37,12 +37,12 @@ export async function connectDatabase(credentials, sslCertPath) {
 
     pool = createPool(credentials, sslCertPath);
     
-    console.log('Pool created. Attempting to connect to the database...');
+  
     const client = await pool.connect();
     try {
-      console.log('Connected. Executing test query...');
+      
       await client.query('SELECT NOW()');
-      console.log('Database connection successful');
+  
     } finally {
       client.release();
     }
@@ -137,42 +137,54 @@ export async function getUserById(id) {
   return (await executeQuery(query, [id]))[0];
 }
 
-export async function updateUserDetails(userId, details) {
-  const client = await pool.connect();
+
+export const updateUserDetails = async (userId, userDetails) => {
+  const { 
+    first_name, 
+    last_name, 
+    email, 
+    address, 
+    city, 
+    province, 
+    postal_code, 
+    phone 
+  } = userDetails;
+
+  const query = `
+    UPDATE users 
+    SET 
+      first_name = COALESCE($1, first_name),
+      last_name = COALESCE($2, last_name),
+      email = COALESCE($3, email),
+      address = COALESCE($4, address),
+      city = COALESCE($5, city),
+      province = COALESCE($6, province),
+      postal_code = COALESCE($7, postal_code),
+      phone = COALESCE($8, phone)
+    WHERE id = $9
+    RETURNING *
+  `;
+
+  const values = [
+    first_name,
+    last_name,
+    email,
+    address,
+    city,
+    province,
+    postal_code,
+    phone,
+    userId
+  ];
+
   try {
-    const {
-      firstName,
-      lastName,
-      address,
-      city,
-      province,
-      postalCode,
-      phone,
-      email
-    } = details;
-
-    const query = `
-      UPDATE users 
-      SET first_name = $1, last_name = $2, address = $3, city = $4, 
-          province = $5, postal_code = $6, phone = $7, email = $8
-      WHERE id = $9
-      RETURNING *
-    `;
-
-    const values = [firstName, lastName, address, city, province, postalCode, phone, email, userId];
-    const result = await client.query(query, values);
-
-    if (result.rows.length === 0) {
-      throw new Error('User not found');
-    }
-
-    console.log('Updated user details:', result.rows[0]);
+    const result = await pool.query(query, values);
     return result.rows[0];
-  } finally {
-    client.release();
+  } catch (error) {
+    console.error('Error in updateUserDetails:', error);
+    throw error;
   }
-}
-
+};
 
 
 export async function hasUserDetails(userId) {

@@ -53,6 +53,18 @@ interface UserDetails {
   phone: string;
 }
 
+
+interface UserDetails {
+  first_name: string;
+  last_name: string;
+  email: string;
+  address: string;
+  city: string;
+  province: string;
+  postal_code: string;
+  phone: string;
+}
+
 const AccountDetails: React.FC = () => {
   const { user } = useUser();
   const [userDetails, setUserDetails] = useState<UserDetails>({
@@ -93,7 +105,8 @@ const AccountDetails: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
-      await axiosInstance.post('/api/auth/details', userDetails);
+      const response = await axiosInstance.post('/api/auth/details', userDetails);
+      console.log('Updated user details:', response.data);
       setMessage('Details updated successfully');
       setIsError(false);
     } catch (error) {
@@ -110,56 +123,56 @@ const AccountDetails: React.FC = () => {
         <Input
           type="text"
           name="first_name"
-          value={userDetails.first_name}
+          value={userDetails.first_name || ''}
           onChange={handleChange}
           placeholder="First Name"
         />
         <Input
           type="text"
           name="last_name"
-          value={userDetails.last_name}
+          value={userDetails.last_name || ''}
           onChange={handleChange}
           placeholder="Last Name"
         />
         <Input
           type="email"
           name="email"
-          value={userDetails.email}
+          value={userDetails.email || ''}
           onChange={handleChange}
           placeholder="Email"
         />
         <Input
           type="text"
           name="address"
-          value={userDetails.address}
+          value={userDetails.address || ''}
           onChange={handleChange}
           placeholder="Address"
         />
         <Input
           type="text"
           name="city"
-          value={userDetails.city}
+          value={userDetails.city || ''}
           onChange={handleChange}
           placeholder="City"
         />
         <Input
           type="text"
           name="province"
-          value={userDetails.province}
+          value={userDetails.province || ''}
           onChange={handleChange}
           placeholder="Province"
         />
         <Input
           type="text"
           name="postal_code"
-          value={userDetails.postal_code}
+          value={userDetails.postal_code || ''}
           onChange={handleChange}
           placeholder="Postal Code"
         />
         <Input
           type="tel"
           name="phone"
-          value={userDetails.phone}
+          value={userDetails.phone || ''}
           onChange={handleChange}
           placeholder="Phone"
         />

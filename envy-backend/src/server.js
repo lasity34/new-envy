@@ -10,7 +10,7 @@ import productRoutes from '../routes/productRoutes.js';
 import cartRoutes from '../routes/cartRoutes.js';
 import checkoutRoutes from '../routes/checkoutRoutes.js';
 import { authenticate, authenticateAdmin } from '../middleware/auth.js';
-
+import shippingRoutes from '../routes/shippingRoutes.js';
 dotenvConfig();
 
 const requiredEnvVariables = [
@@ -66,6 +66,8 @@ async function initializeApp() {
     process.env.DB_PASSWORD = secrets.DB_PASSWORD;
     process.env.JWT_SECRET = secrets.JWT_SECRET;
     process.env.SENDGRID_API_KEY = secrets.SENDGRID_API_KEY;
+    process.env.SHIPLOGIC_API_KEY = secrets.SHIPLOGIC_API_KEY;
+    process.env.GOOGLE_MAPS_API_KEY = secrets.GOOGLE_MAPS_API_KEY;
 
     if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith("SG.")) {
       console.log("SendGrid API key set successfully");
@@ -148,6 +150,7 @@ app.post('/api/products/upload', authenticateAdmin, upload.single('image'), asyn
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/shipping', shippingRoutes);
 app.use('/api/checkout', checkoutRoutes);
 
 app.get('/api/protected', authenticate, (req, res) => {

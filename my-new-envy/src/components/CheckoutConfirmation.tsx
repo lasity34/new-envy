@@ -86,6 +86,58 @@ const ButtonContainer = styled.div`
   margin-top: 20px;
 `;
 
+
+const ShippingOptionsContainer = styled.div`
+  margin-top: 20px;
+`;
+
+const ShippingOption = styled.div<{ selected: boolean }>`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid ${props => props.selected ? '#333' : '#ddd'};
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #333;
+  }
+`;
+
+const TotalBreakdown = styled.div`
+  margin-top: 20px;
+  border-top: 1px solid #ddd;
+  padding-top: 20px;
+`;
+
+const TotalItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+`;
+
+const GrandTotal = styled(TotalItem)`
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-top: 10px;
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+`;
+
+interface ShippingOptionType {
+  rate: number;
+  rate_excluding_vat: number;
+  service_level: {
+    id: string;
+    name: string;
+    description: string;
+  };
+}
+
+
+
 interface UserDetails {
   first_name: string;
   last_name: string;
@@ -103,12 +155,14 @@ const CheckoutConfirmation: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { state, clearLocalCart } = useCart();
+  const [isAddressValid, setIsAddressValid] = useState(true);
+  const [shippingOptions, setShippingOptions] = useState<ShippingOptionType[]>([]);
+  const [selectedShipping, setSelectedShipping] = useState<ShippingOptionType | null>(null);
 
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
         const response = await axiosInstance.get('/api/auth/details');
-        console.log('User details response:', response.data);
         setUserDetails(response.data);
         setLoading(false);
       } catch (error) {
@@ -121,16 +175,70 @@ const CheckoutConfirmation: React.FC = () => {
     fetchUserDetails();
   }, []);
 
+
+  useEffect(() => {
+    const validateAddress = async () => {
+      if (userDetails) {
+        try {
+          const response = await axiosInstance.post('/api/shipping/validate-address', {
+            address: userDetails.address,
+            city: userDetails.city,
+            province: userDetails.province,
+            postalCode: userDetails.postal_code,
+          });
+          setIsAddressValid(response.data.isValid);
+        } catch (error) {
+          console.error('Error validating address:', error);
+          setIsAddressValid(false);
+        }
+      }
+    };
+
+    validateAddress();
+  }, [userDetails]);
+
+
+  useEffect(() => {
+    const fetchShippingRates = async () => {
+      if (userDetails && isAddressValid) {
+        try {
+          const response = await axiosInstance.post('/api/shipping/rates', {
+            cartItems: state.items,
+            deliveryAddress: {
+              address: userDetails.address,
+              city: userDetails.city,
+              province: userDetails.province,
+              postalCode: userDetails.postal_code,
+            },
+          });
+          setShippingOptions(response.data.rates);
+        } catch (error) {
+          console.error('Error fetching shipping rates:', error);
+          setError('Failed to fetch shipping options. Please try again.');
+        }
+      }
+    };
+
+    fetchShippingRates();
+  }, [userDetails, isAddressValid, state.items]);
+
+
+
+  const handleShippingSelect = (option: ShippingOptionType) => {
+    setSelectedShipping(option);
+  };
+
   const handleConfirmOrder = async () => {
-    if (!userDetails) {
-      setError('User details are not available. Please try again.');
+    if (!userDetails || !selectedShipping) {
+      setError('Please select a shipping option before confirming your order.');
       return;
     }
 
     try {
-      const response = await axiosInstance.post('/api/checkout/mock-checkout', {
+      const response = await axiosInstance.post('/api/checkout/process', {
         userData: userDetails,
         cartItems: state.items,
+        selectedShipping,
       });
 
       if (response.data.success) {
@@ -144,6 +252,7 @@ const CheckoutConfirmation: React.FC = () => {
       setError('An error occurred while processing your order. Please try again.');
     }
   };
+
 
   if (loading) {
     return <Container>Loading...</Container>;
@@ -173,9 +282,26 @@ const CheckoutConfirmation: React.FC = () => {
 
   const totalPrice = state.items.reduce((total, item) => total + item.price * item.quantity, 0);
 
+
+  const calculateSubtotal = () => {
+    return state.items.reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+
+  const calculateTotal = () => {
+    const subtotal = calculateSubtotal();
+    const shippingCost = selectedShipping ? selectedShipping.rate : 0;
+    return subtotal + shippingCost;
+  };
+
+
   return (
     <Container>
       <Title>Confirm Your Order</Title>
+      {!isAddressValid && (
+        <ErrorMessage>
+          There might be an issue with your address. Please <Link to="/checkout">edit your details</Link> to ensure accurate shipping.
+        </ErrorMessage>
+      )}
       <Details>
         <SectionTitle>Shipping Details</SectionTitle>
         <DetailItem>
@@ -208,14 +334,42 @@ const CheckoutConfirmation: React.FC = () => {
             <span>R {(item.price * item.quantity).toFixed(2)}</span>
           </CartItem>
         ))}
-        <TotalPrice>Total: R {totalPrice.toFixed(2)}</TotalPrice>
       </CartSummary>
+      <ShippingOptionsContainer>
+        <SectionTitle>Shipping Options</SectionTitle>
+        {shippingOptions.map((option) => (
+          <ShippingOption
+            key={option.service_level.id}
+            selected={selectedShipping?.service_level.id === option.service_level.id}
+            onClick={() => handleShippingSelect(option)}
+          >
+            <span>{option.service_level.name}</span>
+            <span>R {option.rate.toFixed(2)}</span>
+          </ShippingOption>
+        ))}
+      </ShippingOptionsContainer>
+      <TotalBreakdown>
+        <TotalItem>
+          <span>Subtotal:</span>
+          <span>R {calculateSubtotal().toFixed(2)}</span>
+        </TotalItem>
+        <TotalItem>
+          <span>Shipping:</span>
+          <span>R {(selectedShipping ? selectedShipping.rate : 0).toFixed(2)}</span>
+        </TotalItem>
+        <GrandTotal>
+          <span>Total:</span>
+          <span>R {calculateTotal().toFixed(2)}</span>
+        </GrandTotal>
+      </TotalBreakdown>
       <ButtonContainer>
         <Link to="/cart">
           <Button>Back to Cart</Button>
         </Link>
         <div>
-          <Button onClick={handleConfirmOrder}>Confirm Order</Button>
+          <Button onClick={handleConfirmOrder} disabled={!isAddressValid || !selectedShipping}>
+            Confirm Order
+          </Button>
           <Link to="/checkout">
             <Button>Edit Details</Button>
           </Link>

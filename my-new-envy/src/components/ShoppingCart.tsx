@@ -223,7 +223,6 @@ const ShoppingCart: React.FC = () => {
   const checkUserDetails = async () => {
     try {
       const response = await axiosInstance.get('/api/auth/has-details');
-      console.log('Has details response:', response.data);
       setHasDetails(response.data.hasDetails);
     } catch (error) {
       console.error('Error checking user details:', error);
@@ -250,7 +249,6 @@ const ShoppingCart: React.FC = () => {
   }, [user, location]);
 
   const handleCheckout = () => {
-    console.log('Handling checkout. Has details:', hasDetails);
     if (!user) {
       navigate("/login");
     } else if (hasDetails) {

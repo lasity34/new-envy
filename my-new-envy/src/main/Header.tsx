@@ -295,7 +295,6 @@ const LogoutButton = styled.button`
   }
 `;
 
-
 const Header: React.FC = () => {
   const location = useLocation();
   const { state, clearCart } = useCart();
@@ -340,7 +339,7 @@ const Header: React.FC = () => {
     };
   }, []);
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === "admin";
 
   if (isAdmin) {
     return (
@@ -350,7 +349,6 @@ const Header: React.FC = () => {
       </AdminHeaderContainer>
     );
   }
-
 
   return (
     <HeaderContainer>
@@ -373,11 +371,19 @@ const Header: React.FC = () => {
             <DropdownContainer onClick={toggleDropdown} ref={dropdownRef}>
               <DropdownIcon />
               <DropdownMenu $show={showDropdown}>
-                <DropdownItem onClick={() => setShowDropdown(false)} as={RouterLink} to="/account-details">
+                <DropdownItem
+                  onClick={() => setShowDropdown(false)}
+                  as={RouterLink}
+                  to="/account-details"
+                >
                   Account Details
                 </DropdownItem>
-                <DropdownItem onClick={() => setShowDropdown(false)} as={RouterLink} to="/orders">
-                  Order History
+                <DropdownItem
+                  onClick={() => setShowDropdown(false)}
+                  as={RouterLink}
+                  to="/my-orders"
+                >
+                  My Orders
                 </DropdownItem>
                 <DropdownItem onClick={handleLogout}>Logout</DropdownItem>
               </DropdownMenu>
@@ -395,7 +401,9 @@ const Header: React.FC = () => {
               <CartIconContainer>
                 <RouterLink to="/cart">
                   <MdOutlineShoppingBag />
-                  {itemCount > 0 && <ItemCountBadge>{itemCount}</ItemCountBadge>}
+                  {itemCount > 0 && (
+                    <ItemCountBadge>{itemCount}</ItemCountBadge>
+                  )}
                 </RouterLink>
               </CartIconContainer>
             </IconNavLink>
@@ -406,33 +414,54 @@ const Header: React.FC = () => {
         <Nav $isOpen={isMenuOpen}>
           <NavLinks>
             <NavLink>
-              <RouterLink to="/" onClick={() => setIsMenuOpen(false)}>Home</RouterLink>
+              <RouterLink to="/" onClick={() => setIsMenuOpen(false)}>
+                Home
+              </RouterLink>
             </NavLink>
             {isHomePage ? (
               <NavLink>
-                <Link to="#featured" smooth onClick={() => setIsMenuOpen(false)}>Shop</Link>
+                <Link
+                  to="#featured"
+                  smooth
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Shop
+                </Link>
               </NavLink>
             ) : (
               <NavLink>
-                <RouterLink to="/#featured" onClick={() => setIsMenuOpen(false)}>Shop</RouterLink>
+                <RouterLink
+                  to="/#featured"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Shop
+                </RouterLink>
               </NavLink>
             )}
             {isHomePage ? (
               <NavLink>
-                <Link to="#about" smooth onClick={() => setIsMenuOpen(false)}>About Us</Link>
+                <Link to="#about" smooth onClick={() => setIsMenuOpen(false)}>
+                  About Us
+                </Link>
               </NavLink>
             ) : (
               <NavLink>
-                <RouterLink to="/#about" onClick={() => setIsMenuOpen(false)}>About Us</RouterLink>
+                <RouterLink to="/#about" onClick={() => setIsMenuOpen(false)}>
+                  About Us
+                </RouterLink>
               </NavLink>
             )}
             {isHomePage ? (
               <NavLink>
-                <Link to="#contact" smooth onClick={() => setIsMenuOpen(false)}>Contact</Link>
+                <Link to="#contact" smooth onClick={() => setIsMenuOpen(false)}>
+                  Contact
+                </Link>
               </NavLink>
             ) : (
               <NavLink>
-                <RouterLink to="/#contact" onClick={() => setIsMenuOpen(false)}>Contact</RouterLink>
+                <RouterLink to="/#contact" onClick={() => setIsMenuOpen(false)}>
+                  Contact
+                </RouterLink>
               </NavLink>
             )}
           </NavLinks>
@@ -441,6 +470,5 @@ const Header: React.FC = () => {
     </HeaderContainer>
   );
 };
-
 
 export default Header;
