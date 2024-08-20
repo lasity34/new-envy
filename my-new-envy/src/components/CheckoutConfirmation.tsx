@@ -73,12 +73,12 @@ const CartItem = styled.div`
   margin-bottom: 10px;
 `;
 
-const TotalPrice = styled.div`
-  font-weight: bold;
-  text-align: right;
-  margin-top: 15px;
-  font-size: 1.2em;
-`;
+// const TotalPrice = styled.div`
+//   font-weight: bold;
+//   text-align: right;
+//   margin-top: 15px;
+//   font-size: 1.2em;
+// `;
 
 const ButtonContainer = styled.div`
   display: flex;
@@ -280,7 +280,6 @@ const CheckoutConfirmation: React.FC = () => {
     );
   }
 
-  const totalPrice = state.items.reduce((total, item) => total + item.price * item.quantity, 0);
 
 
   const calculateSubtotal = () => {

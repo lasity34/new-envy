@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useUser } from "../context/UserContext";
@@ -201,18 +201,9 @@ const Checkout: React.FC = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (
-      userData.address &&
-      userData.city &&
-      userData.province &&
-      userData.postalCode
-    ) {
-      fetchShippingRates();
-    }
-  }, [userData.address, userData.city, userData.province, userData.postalCode]);
+ 
 
-  const fetchShippingRates = async () => {
+  const fetchShippingRates = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
@@ -243,7 +234,18 @@ const Checkout: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userData.address, userData.city, userData.province, userData.postalCode, state.items]);
+
+  useEffect(() => {
+    if (
+      userData.address &&
+      userData.city &&
+      userData.province &&
+      userData.postalCode
+    ) {
+      fetchShippingRates();
+    }
+  }, [userData.address, userData.city, userData.province, userData.postalCode, fetchShippingRates]);
 
   const getEstimatedDeliveryTime = (serviceLevelName: string): string => {
     const lowerCaseName = serviceLevelName.toLowerCase();
