@@ -79,7 +79,9 @@ interface Order {
   total_amount: number | string;
   created_at: string;
   items: OrderItem[];
+  tracking_number?: string;
 }
+
 
 const AdminOrders: React.FC = () => {
   const navigate = useNavigate();
@@ -110,6 +112,37 @@ const AdminOrders: React.FC = () => {
 
   const handleStatusChange = async (orderId: number, newStatus: string) => {
     try {
+      if (newStatus === 'shipped') {
+        // Fetch order details
+        const orderResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/checkout/orders/${orderId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        const orderDetails = orderResponse.data;
+
+        // Create shipment
+        const shipmentResponse = await axios.post(`${process.env.REACT_APP_API_URL}/api/shipping/create-shipment`, {
+          orderId: orderId,
+          deliveryAddress: orderDetails.deliveryAddress,
+          items: orderDetails.items,
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+
+        // Update order with tracking information
+        await axios.put(`${process.env.REACT_APP_API_URL}/api/checkout/admin/orders/${orderId}/tracking`, {
+          trackingNumber: shipmentResponse.data.tracking_number,
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+      }
+
+      // Update order status
       await axios.put(`${process.env.REACT_APP_API_URL}/api/checkout/admin/orders/${orderId}/status`, 
         { status: newStatus },
         {
@@ -118,6 +151,7 @@ const AdminOrders: React.FC = () => {
           },
         }
       );
+
       setOrders(orders.map(order => 
         order.id === orderId ? { ...order, status: newStatus } : order
       ));
@@ -125,6 +159,44 @@ const AdminOrders: React.FC = () => {
     } catch (error) {
       console.error('Error updating order status:', error);
       setMessage('Failed to update order status.');
+    }
+  };
+
+  const downloadShipmentLabel = async (orderId: number) => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/shipping/shipment-label/${orderId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `shipment-label-${orderId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+    } catch (error) {
+      console.error('Error downloading shipment label:', error);
+      setMessage('Failed to download shipment label.');
+    }
+  };
+
+  const viewTrackingInfo = async (trackingNumber: string) => {
+    try {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/shipping/tracking/${trackingNumber}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      // Display tracking information in a modal or new page
+      console.log(response.data);
+      // Implement a modal or navigation to display this data
+      setMessage('Tracking information fetched successfully. Check console for details.');
+    } catch (error) {
+      console.error('Error fetching tracking information:', error);
+      setMessage('Failed to fetch tracking information.');
     }
   };
 
@@ -140,6 +212,18 @@ const AdminOrders: React.FC = () => {
   };
 
 
+  const getCustomerName = (order: Order) => {
+    if (order.first_name && order.last_name) {
+      return `${order.first_name} ${order.last_name}`;
+    } else if (order.first_name) {
+      return order.first_name;
+    } else if (order.last_name) {
+      return order.last_name;
+    } else {
+      return "N/A";
+    }
+  };
+
 
   return (
     <Container>
@@ -150,7 +234,7 @@ const AdminOrders: React.FC = () => {
         <Table>
           <thead>
             <tr>
-              <th>Order ID</th>
+              <th>Order Number</th>
               <th>Customer Name</th>
               <th>Total Amount</th>
               <th>Status</th>
@@ -163,7 +247,7 @@ const AdminOrders: React.FC = () => {
             {orders.map((order) => (
               <tr key={order.id}>
                 <td>{order.id}</td>
-                <td>{`${order.first_name} ${order.last_name}`}</td>
+                <td>{getCustomerName(order)}</td>
                 <td>R{formatTotalAmount(order.total_amount)}</td>
                 <td>{order.status}</td>
                 <td>{new Date(order.created_at).toLocaleString()}</td>
@@ -183,9 +267,18 @@ const AdminOrders: React.FC = () => {
                   >
                     <option value="processing">Processing</option>
                     <option value="shipped">Shipped</option>
+                    <option value="delivering">Delivering</option>
                     <option value="delivered">Delivered</option>
                     <option value="cancelled">Cancelled</option>
                   </Select>
+                  {order.status === 'shipped' && (
+                    <>
+                      <Button onClick={() => downloadShipmentLabel(order.id)}>Download Label</Button>
+                      {order.tracking_number && (
+                        <Button onClick={() => viewTrackingInfo(order.tracking_number!)}>View Tracking</Button>
+                      )}
+                    </>
+                  )}
                 </td>
               </tr>
             ))}
@@ -195,7 +288,5 @@ const AdminOrders: React.FC = () => {
     </Container>
   );
 };
-
-
 
 export default AdminOrders;

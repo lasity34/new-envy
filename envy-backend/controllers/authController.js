@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import sgMail from '@sendgrid/mail';
-import { createUser, getUserByEmail, getUserByUsername, getUserById, pool } from '../db/database.js';
+import { createUser, getUserByEmail, getUserByUsername, getUserById, pool, getUserDetails, updateUserDetails, hasUserDetails  } from '../db/database.js';
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
@@ -50,11 +50,10 @@ export const signup = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  console.log('Login request body:', req.body);
   const { identifier, password } = req.body;
 
   try {
-    console.log('Login attempt with identifier:', identifier);
+   
 
     if (!identifier || !password) {
       console.log('Missing identifier or password');
@@ -178,4 +177,70 @@ export const resetPassword = async (req, res) => {
 
 export const logout = async (req, res) => {
   res.status(200).json({ message: 'Logged out successfully' });
+};
+
+export const getUserDetailsController = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await getUserDetails(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.status(200).json(user);
+  } catch (error) {
+    console.error('Error fetching user details:', error);
+    res.status(500).json({ message: 'Error fetching user details', error: error.message });
+  }
+};
+
+export const updateUserDetailsController = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    console.log('Updating user details for user ID:', userId);
+    console.log('Received user details:', req.body);
+
+    const { 
+      first_name, 
+      last_name, 
+      email, 
+      address, 
+      city, 
+      province, 
+      postal_code, 
+      phone 
+    } = req.body;
+
+    const updatedUser = await updateUserDetails(userId, {
+      first_name,
+      last_name,
+      email,
+      address,
+      city,
+      province,
+      postal_code,
+      phone
+    });
+   
+    console.log('Updated user:', updatedUser);
+   
+    res.status(200).json({ message: 'User details updated successfully', user: updatedUser });
+  } catch (error) {
+    console.error('Error updating user details:', error);
+    res.status(500).json({ message: 'Error updating user details', error: error.message });
+  }
+};
+
+export const hasUserDetailsController = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+ 
+    const hasDetails = await hasUserDetails(userId);
+   
+
+   
+    res.status(200).json({ hasDetails });
+  } catch (error) {
+    console.error('Error checking user details:', error);
+    res.status(500).json({ message: 'Error checking user details', error: error.message });
+  }
 };

@@ -1,100 +1,134 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useCart } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { RiDeleteBinLine } from "react-icons/ri";
-import { useUser } from "../context/UserContext"; // Add this import
+import { useUser } from "../context/UserContext";
+import axiosInstance from '../axiosInstance';
 
 const CartContainer = styled.div`
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 20px;
+  padding: 15px;
   background: #fff;
-  width: 85%;
-  margin: auto;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
   font-family: "Crimson Text", serif;
+
+  @media (min-width: 768px) {
+    padding: 20px;
+    max-width: 85%;
+  }
 `;
 
 const CartTitle = styled.h2`
-  font-size: 2.5rem;
-  font-weight: 300;
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin-bottom: 15px;
+
+  @media (min-width: 768px) {
+    font-size: 2.5rem;
+    font-weight: 300;
+    margin-bottom: 20px;
+  }
 `;
 
-const HeaderRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-weight: bold;
-  margin-bottom: 10px;
-  padding: 10px 0;
-  border-bottom: solid 1px #eceaea;
-  width: 110%;
-`;
-
-const HeaderItem = styled.div`
-  display: flex;
-  color: #777575;
-  font-size: 1rem;
-  font-family: "Playfair", serif;
-  font-weight: 300;
-  align-items: center;
-  width: 200px;
-`;
 
 const CartItemContainer = styled.div`
   display: flex;
-  justify-content: space-between; // Maintains space distribution between elements
-  width: 110%;
-  margin: 0.9em 0;
-  border-bottom: solid 1px #eceaea;
-  padding-bottom: 1em;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eceaea;
+  padding: 10px 0;
+  position: relative;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
 `;
+
 
 const ItemDetails = styled.div`
   display: flex;
-  width: 300px; // Match width of Product header
+  width: 100%;
+  margin-bottom: 10px;
+
+  @media (min-width: 768px) {
+    width: 40%;
+    margin-bottom: 0;
+  }
 `;
 
 const ItemImage = styled.img`
-  width: 90px;
-  height: 90px;
-  border-radius: 4px;
-  margin-right: 20px;
+  width: 80px;
+  height: auto;
+  max-height: 80px;
+  object-fit: contain;
+  margin-right: 15px;
+
+  @media (min-width: 768px) {
+    width: 100px;
+    max-height: 100px;
+  }
 `;
 
 const ItemInfo = styled.div`
   display: flex;
   flex-direction: column;
-  width: 120px; // Subtract width of ItemImage from ItemDetails
+  justify-content: space-between;
 `;
 
 const ItemName = styled.p`
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #333;
-  margin: 0;
-  margin-bottom: 10px;
+  margin: 0 0 5px 0;
 `;
 
 const ItemPrice = styled.p`
-  font-size: 1.3rem;
-  color:  #6c6868;
-  font-weight: 300;
-  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 5px 0;
 `;
 
-const ItemTotal = styled.p`
-  font-size: 1.2rem;
-  color: #333;
-  margin: 0;
-  padding: 0 10px;
-  width: 200px; // Match width of Total header
+const StockInfo = styled.span`
+  font-size: 0.9rem;
+  color: #28a745;
+`;
+
+const QualityAdContainer = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    width: 30%;
+    justify-content: flex-start;
+  }
+`;
+
+const QuantityAndTotalContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 10px;
+
+  @media (min-width: 768px) {
+    margin-top: 0;
+  }
 `;
 
 const QuantityAdjuster = styled.div`
   display: flex;
-  height: 30px;
-  justify-content: left;
-  border: 1px solid #5c5c5c;
+  align-items: center;
+  border: 1px solid #ccc;
   padding: 5px;
   width: 110px;
 `;
@@ -115,51 +149,115 @@ const QuantityInput = styled.input`
   margin: 0 5px;
 `;
 
+const DeleteIcon = styled(RiDeleteBinLine)`
+  cursor: pointer;
+  font-size: 1.2rem;
+  margin-left: 20px;
+
+   @media (min-width: 768px) {
+    font-size: 1.5rem;
+  }
+
+`;
+
+const ItemTotal = styled.p`
+  font-size: 1.1rem;
+  color: #333;
+  margin-right: 10px;
+ width: 30%;
+
+  @media (min-width: 768px) {
+    width: 20%;
+  }
+`;
+
+const NoticeText = styled.p`
+  font-size: 0.9rem;
+  color: #666;
+  margin: 20px 0;
+  text-align: center;
+  width: 90%;
+`;
+
 const Total = styled.div`
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: right;
-  width: 98%;
+  width: 90%;
+  margin-top: 20px;
+  padding-top: 10px;
+  border-top: 1px solid #eceaea;
 `;
 
 const TotalPriceText = styled.div`
-  font-size: 1.3rem;
-  margin-right: 1.6em;
+  font-size: 1.2rem;
+  font-weight: 600;
 `;
 
 const TotalPrice = styled.div`
-  text-align: right;
-  font-size: 1.2em;
-  margin: 15px 0;
-  color:  #6d6a6a;
-`;
-
-const QualityAdContainer = styled.div`
-  width: 50%;
-  display: flex;
-  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
 `;
 
 const CheckoutButton = styled.button`
   background-color: #333;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 15px 20px;
   cursor: pointer;
-  font-size: 1.2rem;
+  font-size: 1rem;
   margin-top: 20px;
+  width: 90%;
+  text-transform: uppercase;
 `;
 
 const ShoppingCart: React.FC = () => {
   const { state, dispatch, removeFromCart, adjustQuantity, mergeAnonymousCartWithUserCart } = useCart();
-  const { user } = useUser(); // Add this line
+  const { user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [hasDetails, setHasDetails] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const checkUserDetails = async () => {
+    try {
+      const response = await axiosInstance.get('/api/auth/has-details');
+      setHasDetails(response.data.hasDetails);
+    } catch (error) {
+      console.error('Error checking user details:', error);
+      setHasDetails(false);
+    }
+  };
 
   useEffect(() => {
-    if (user) {
-      mergeAnonymousCartWithUserCart();
-    }
+    const initializeCart = async () => {
+      if (user) {
+        await mergeAnonymousCartWithUserCart();
+        await checkUserDetails();
+      }
+      setIsLoading(false);
+    };
+
+    initializeCart();
   }, [user, mergeAnonymousCartWithUserCart]);
+
+  useEffect(() => {
+    if (user && location.state?.fromCheckout) {
+      checkUserDetails();
+    }
+  }, [user, location]);
+
+  const handleCheckout = () => {
+    if (!user) {
+      navigate("/login");
+    } else if (hasDetails) {
+      navigate("/checkout-confirmation");
+    } else {
+      navigate("/checkout");
+    }
+  };
+
 
   const handleRemove = async (id: string) => {
     if (user) {
@@ -184,22 +282,20 @@ const ShoppingCart: React.FC = () => {
     0
   );
 
-  if (state.items.length === 0) {
-    return <div>Your cart is empty!</div>;
+  if (isLoading) {
+    return <CartContainer>Loading your cart...</CartContainer>;
   }
 
-  const handleCheckout = () => {
-    navigate("/checkout");
-  };
+  if (state.items.length === 0) {
+    return <CartContainer>Your cart is empty!</CartContainer>;
+  }
 
-  return (
+  
+
+
+   return (
     <CartContainer>
-      <CartTitle>Your Cart</CartTitle>
-      <HeaderRow>
-        <HeaderItem>Product</HeaderItem>
-        <HeaderItem style={{ marginLeft: "150px" }}>Quantity</HeaderItem>
-        <HeaderItem>Total</HeaderItem>
-      </HeaderRow>
+      <CartTitle>Cart</CartTitle>
       {state.items.map((item) => (
         <CartItemContainer key={item.id}>
           <ItemDetails>
@@ -207,37 +303,35 @@ const ShoppingCart: React.FC = () => {
             <ItemInfo>
               <ItemName>{item.name}</ItemName>
               <ItemPrice>R {Number(item.price).toFixed(2)}</ItemPrice>
+              <StockInfo>In stock</StockInfo>
             </ItemInfo>
           </ItemDetails>
-          <QualityAdContainer>
-            <QuantityAdjuster>
-              <Button
-                onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-              >
-                -
-              </Button>
-              <QuantityInput value={item.quantity} readOnly />
-              <Button
-                onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-              >
-                +
-              </Button>
-            </QuantityAdjuster>
-            <RiDeleteBinLine
-              style={{ cursor: "pointer", marginLeft: "25px", marginTop: "15px" }}
-              onClick={() => handleRemove(item.id)}
-            />
-          </QualityAdContainer>
-          <ItemTotal>R {(Number(item.price) * item.quantity).toFixed(2)}</ItemTotal>
+          <QuantityAndTotalContainer>
+            <QualityAdContainer>
+              <QuantityAdjuster>
+                <Button onClick={() => handleQuantityChange(item.id, item.quantity - 1)}>-</Button>
+                <QuantityInput value={item.quantity} readOnly />
+                <Button onClick={() => handleQuantityChange(item.id, item.quantity + 1)}>+</Button>
+              </QuantityAdjuster>
+              <DeleteIcon onClick={() => handleRemove(item.id)} />
+            </QualityAdContainer>
+            <ItemTotal> R {(Number(item.price) * item.quantity).toFixed(2)}</ItemTotal>
+          </QuantityAndTotalContainer>
         </CartItemContainer>
       ))}
+      <NoticeText>
+        Placing an item in your shopping cart does not reserve that item or price. We only reserve stock for your order once payment is received.
+      </NoticeText>
       <Total>
-        <TotalPriceText>Total:</TotalPriceText>
+        <TotalPriceText>TOTAL: ({state.items.length} {state.items.length === 1 ? 'Item' : 'Items'})</TotalPriceText>
         <TotalPrice>R {totalPrice.toFixed(2)}</TotalPrice>
       </Total>
-      <CheckoutButton onClick={handleCheckout}>Proceed to Checkout</CheckoutButton>
+      <CheckoutButton onClick={handleCheckout}>
+        {user ? "Proceed to Checkout" : "Login to Checkout"}
+      </CheckoutButton>
     </CartContainer>
   );
 };
+
 
 export default ShoppingCart;

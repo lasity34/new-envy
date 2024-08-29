@@ -6,7 +6,8 @@ import {
   addProduct,
   updateProductDetails,
   removeProduct,
-  uploadImage
+  uploadImage,
+  updateProductStock
 } from '../controllers/productsController.js';
 import { authenticateAdmin } from '../middleware/auth.js';
 
@@ -19,5 +20,6 @@ router.post('/', authenticateAdmin, upload.single('image'), addProduct);
 router.put('/:id', authenticateAdmin, upload.single('image'), updateProductDetails);
 router.delete('/:id', authenticateAdmin, removeProduct);
 router.post('/upload', authenticateAdmin, upload.single('image'), uploadImage);
+router.patch('/:id/stock', authenticateAdmin, updateProductStock);
 
 export default router;
